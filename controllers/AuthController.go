@@ -2,26 +2,116 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"aaronblondeau.com/hasura-base-go/prisma/db"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	goredislib "github.com/redis/go-redis/v9"
 )
 
 type AuthController struct {
 	client *db.PrismaClient
+	cache  *goredislib.Client
 }
 
 func NewAuthController(e *echo.Echo) *AuthController {
+	redisAddress := os.Getenv("REDIS_ADDRESS")
+	if redisAddress == "" {
+		redisAddress = "localhost:6379"
+	}
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	redisDB := 0
+
 	controller := AuthController{
 		client: db.NewClient(),
+		cache: goredislib.NewClient(&goredislib.Options{
+			Addr:     redisAddress,
+			Password: redisPassword,
+			DB:       redisDB,
+		}),
 	}
 	return &controller
+}
+
+func authToken(controller *AuthController, token string, c echo.Context) error {
+	// Check for cached value in redis
+	cachedResponseStr, cachedResponseError := controller.cache.Get(context.Background(), token).Bytes()
+	if cachedResponseError == nil {
+		cachedResponse := map[string]interface{}{}
+		cachedResponseUnmarshalError := json.Unmarshal(cachedResponseStr, &cachedResponse)
+		if cachedResponseUnmarshalError == nil {
+			return c.JSON(http.StatusOK, cachedResponse)
+		}
+	}
+
+	parsed, tokenError := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		keyStr := os.Getenv("JWT_TOKEN_KEY")
+		if keyStr == "" {
+			return nil, fmt.Errorf("backend not configured - missing jwt token key")
+		}
+		key := []byte(keyStr)
+		return key, nil
+	})
+	if tokenError != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": tokenError.Error(),
+		})
+	}
+
+	if !parsed.Valid {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"message": "Invalid token.",
+		})
+	}
+
+	claims := parsed.Claims.(jwt.MapClaims)
+	userId := claims["user_id"].(string)
+
+	if userId == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"message": "Invalid token.",
+		})
+	}
+
+	// Check if user exists
+	user, userErr := controller.client.Users.FindUnique(db.Users.ID.Equals(userId)).Exec(context.Background())
+	if userErr != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"message": "User not found.",
+		})
+	}
+
+	// Use password timestamp to invalidate tokens when password changes
+	// Note, this depends on user's cached tokens getting removed on password changes
+	passwordAt := claims["password_at"].(string)
+	if user.PasswordAt.String() != passwordAt {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"message": "Token expired.",
+		})
+	}
+
+	role := "user"
+
+	response := map[string]interface{}{
+		"X-Hasura-Role":    role,
+		"X-Hasura-User-Id": userId,
+	}
+
+	// Cache response
+	responseJson, _ := json.Marshal(response)
+	redisErr := controller.cache.Set(context.Background(), token, responseJson, time.Duration(time.Minute*60)).Err()
+	if redisErr != nil {
+		log.Print(redisErr)
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func (controller *AuthController) Run(e *echo.Echo) error {
@@ -29,9 +119,30 @@ func (controller *AuthController) Run(e *echo.Echo) error {
 		return err
 	}
 
-	// e.POST("/hasura/auth", func(c echo.Context) error {
+	// Check cache connection
+	pingCmd := controller.cache.Ping(context.Background())
+	pingErr := pingCmd.Err()
+	if pingErr != nil {
+		return pingErr
+	}
 
-	// }
+	e.POST("/hasura/auth", func(c echo.Context) error {
+		token := c.Request().Header.Get("Authorization")
+
+		if token == "" {
+			body := map[string]interface{}{}
+			bodyErr := json.NewDecoder(c.Request().Body).Decode(&body)
+			if bodyErr == nil {
+				token = body["token"].(string)
+			}
+		}
+
+		if strings.HasPrefix(token, "Bearer ") {
+			token = strings.Replace(token, "Bearer ", "", 1)
+		}
+
+		return authToken(controller, token, c)
+	})
 
 	e.GET("/hasura/auth", func(c echo.Context) error {
 		token := c.Request().Header.Get("Authorization")
@@ -44,63 +155,7 @@ func (controller *AuthController) Run(e *echo.Echo) error {
 			token = strings.Replace(token, "Bearer ", "", 1)
 		}
 
-		// TODO check for cached value in redis
-
-		parsed, tokenError := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-			keyStr := os.Getenv("JWT_TOKEN_KEY")
-			if keyStr == "" {
-				return nil, fmt.Errorf("backend not configured - missing jwt token key")
-			}
-			key := []byte(keyStr)
-			return key, nil
-		})
-		if tokenError != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{
-				"message": tokenError.Error(),
-			})
-		}
-
-		if !parsed.Valid {
-			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
-				"message": "Invalid token.",
-			})
-		}
-
-		claims := parsed.Claims.(jwt.MapClaims)
-		userId := claims["user_id"].(string)
-
-		if userId == "" {
-			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
-				"message": "Invalid token.",
-			})
-		}
-
-		// Check if user exists
-		user, userErr := controller.client.Users.FindUnique(db.Users.ID.Equals(userId)).Exec(context.Background())
-		if userErr != nil {
-			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
-				"message": "User not found.",
-			})
-		}
-
-		// Use password timestamp to invalidate tokens when password changes
-		// Note, this depends on user's cached tokens getting removed on password changes
-		passwordAt := claims["password_at"].(string)
-		fmt.Println(user.PasswordAt.String(), passwordAt)
-		if user.PasswordAt.String() != passwordAt {
-			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
-				"message": "Token expired.",
-			})
-		}
-
-		role := "user"
-
-		// TODO - cache the response in redis
-
-		return c.JSON(http.StatusOK, map[string]interface{}{
-			"X-Hasura-Role":    role,
-			"X-Hasura-User-Id": userId,
-		})
+		return authToken(controller, token, c)
 	})
 
 	return nil
