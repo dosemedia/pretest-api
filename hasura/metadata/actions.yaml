@@ -1,0 +1,64 @@
+actions:
+  - name: changeEmail
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/changeEmail'
+    permissions:
+      - role: user
+  - name: changePassword
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/changePassword'
+    permissions:
+      - role: user
+  - name: destroyUser
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/destroyUser'
+    permissions:
+      - role: user
+  - name: login
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/login'
+    permissions:
+      - role: public
+  - name: register
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/register'
+    permissions:
+      - role: public
+    comment: Create new user.
+  - name: resendVerificationEmail
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/resendVerificationEmail'
+    permissions:
+      - role: user
+  - name: resetPassword
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/resetPassword'
+    permissions:
+      - role: public
+  - name: sendPasswordResetEmail
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/sendPasswordResetEmail'
+    permissions:
+      - role: public
+  - name: verifyEmail
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/verifyEmail'
+    permissions:
+      - role: user
+      - role: public
+custom_types:
+  enums: []
+  input_objects: []
+  objects:
+    - name: RegisterOutput
+    - name: LoginOutput
+  scalars: []
