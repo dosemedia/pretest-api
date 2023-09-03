@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"syscall"
 
 	"aaronblondeau.com/hasura-base-go/controllers"
+	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
@@ -75,6 +77,67 @@ func main() {
 		}
 	}
 
+	//////////////// Start Crew Setup
+
+	crewRedisAddress := os.Getenv("REDIS_ADDRESS")
+	if crewRedisAddress == "" {
+		crewRedisAddress = "localhost:6379"
+	}
+	crewRedisPassword := os.Getenv("REDIS_PASSWORD")
+
+	storage := crew.NewRedisTaskStorage(crewRedisAddress, crewRedisPassword, 1)
+	defer storage.Client.Close()
+
+	crewClient := crew.NewHttpPostClient()
+
+	throttlePush := make(chan crew.ThrottlePushQuery, 8)
+	throttlePop := make(chan crew.ThrottlePopQuery, 8)
+	crewThrottler := &crew.Throttler{
+		Push: throttlePush,
+		Pop:  throttlePop,
+	}
+
+	// No throttling for crew
+	go func() {
+		for {
+			select {
+			case pushQuery := <-throttlePush:
+				// Default behavior = immediate response => no throttling
+				fmt.Println("~~ Would throttle", pushQuery.Worker, pushQuery.TaskId)
+				pushQuery.Resp <- true
+			case popQuery := <-throttlePop:
+				fmt.Println("~~ Would unthrottle", popQuery.Worker, popQuery.TaskId)
+			}
+		}
+	}()
+
+	// Create the task controller (call to startup is further down)
+	crewController := crew.NewTaskController(storage, crewClient, crewThrottler)
+
+	// Validates each api call's Authorization header
+	crewAuthMiddleware := func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			// For systems requiring no auth, just return next(c)
+			return next(c)
+		}
+	}
+
+	// Create the rest api server
+	inShutdown := false
+	watchers := make(map[string]crew.TaskGroupWatcher, 0)
+	crew.BuildRestApi(e, "/crew", crewController, crewAuthMiddleware, nil, &inShutdown, watchers)
+
+	// TODO - add worker routes to crewEcho
+
+	// Controller startup is performed after rest api is launched
+	// This is in case we switch TaskController.TriggerEvaluate to happen via an http call in scaled environments.
+	startupError := crewController.Startup()
+	if startupError != nil {
+		panic(startupError)
+	}
+
+	//////////////// End Crew Setup
+
 	// Hook into the shutdown signal
 	cleanupCompleteWg := sync.WaitGroup{}
 	done := make(chan os.Signal, 1)
@@ -88,6 +151,12 @@ func main() {
 		actionsController.Shutdown()
 		authController.Shutdown()
 
+		// Shutdown crew
+		for _, watcher := range watchers {
+			close(watcher.Channel)
+		}
+
+		// Shutdown echo
 		e.Close()
 
 		cleanupCompleteWg.Done()
@@ -96,7 +165,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "1323"
+		port = "3000"
 	}
 	e.Logger.Error(e.Start(host + ":" + port))
 
