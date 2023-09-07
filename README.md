@@ -77,3 +77,4 @@ https://goprisma.org/docs/getting-started/quickstart
 ## TODO
 
 How to set go prisma db conn string from env var?
+Update env vars (crew specific ones added, search for os.Getenv)

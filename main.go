@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,6 +17,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
+
+//go:embed emails
+var emailTemplates embed.FS
 
 func main() {
 	err := godotenv.Load()
@@ -56,16 +60,6 @@ func main() {
 			"hasura":  response,
 		})
 	})
-
-	actionsController := controllers.NewActionsController(e)
-	if err := actionsController.Run(e); err != nil {
-		panic(err)
-	}
-
-	authController := controllers.NewAuthController(e)
-	if err := authController.Run(e); err != nil {
-		panic(err)
-	}
 
 	host := os.Getenv("HOST")
 	if host == "" {
@@ -127,7 +121,11 @@ func main() {
 	watchers := make(map[string]crew.TaskGroupWatcher, 0)
 	crew.BuildRestApi(e, "/crew", crewController, crewAuthMiddleware, nil, &inShutdown, watchers)
 
-	// TODO - add worker routes to crewEcho
+	// Add worker routes to crewEcho
+	workerController := controllers.NewWorkerController(e, emailTemplates)
+	if err := workerController.Run(e); err != nil {
+		panic(err)
+	}
 
 	// Controller startup is performed after rest api is launched
 	// This is in case we switch TaskController.TriggerEvaluate to happen via an http call in scaled environments.
@@ -137,6 +135,16 @@ func main() {
 	}
 
 	//////////////// End Crew Setup
+
+	actionsController := controllers.NewActionsController(e, crewController)
+	if err := actionsController.Run(e); err != nil {
+		panic(err)
+	}
+
+	authController := controllers.NewAuthController(e)
+	if err := authController.Run(e); err != nil {
+		panic(err)
+	}
 
 	// Hook into the shutdown signal
 	cleanupCompleteWg := sync.WaitGroup{}

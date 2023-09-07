@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,28 +9,39 @@ import (
 	"strings"
 
 	"aaronblondeau.com/hasura-base-go/prisma/db"
+	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
+type RegisterBodyInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type RegisterBody struct {
+	Input RegisterBodyInput `json:"input"`
+}
+
+type LoginBodyInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type LoginBody struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Input LoginBodyInput `json:"input"`
 }
 
 type ActionsController struct {
-	client *db.PrismaClient
+	client        *db.PrismaClient
+	crewContoller *crew.TaskController
 }
 
-func NewActionsController(e *echo.Echo) *ActionsController {
+func NewActionsController(e *echo.Echo, crewController *crew.TaskController) *ActionsController {
 	controller := ActionsController{
-		client: db.NewClient(),
+		client:        db.NewClient(),
+		crewContoller: crewController,
 	}
 	return &controller
 }
@@ -67,14 +77,14 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 		}
 
 		// Always handle emails in lowercase on the backend
-		email := strings.ToLower(body.Email)
+		email := strings.ToLower(body.Input.Email)
 		if email == "" {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": "Email is required.",
 			})
 		}
 
-		password := body.Password
+		password := body.Input.Password
 		if len(password) < 5 {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": "Password must be at least 5 characters long.",
@@ -82,7 +92,7 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 		}
 
 		// Check for existing user so we can send a nicer error message than unique key constraint
-		_, existingError := controller.client.Users.FindUnique(db.Users.Email.Equals(email)).Exec(context.Background())
+		_, existingError := controller.client.Users.FindUnique(db.Users.Email.Equals(email)).Exec(c.Request().Context())
 		if existingError == nil {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": fmt.Sprintf("User with email %v already exists.", email),
@@ -96,7 +106,7 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 			})
 		}
 
-		createdUser, createErr := controller.client.Users.CreateOne(db.Users.Email.Set(email), db.Users.HashedPassword.Set(string(hashedPassword))).Exec(context.Background())
+		createdUser, createErr := controller.client.Users.CreateOne(db.Users.Email.Set(email), db.Users.HashedPassword.Set(string(hashedPassword))).Exec(c.Request().Context())
 		if createErr != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 				"message": createErr.Error(),
@@ -111,8 +121,26 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 			})
 		}
 
-		// TODO - send verification/welcome email
+		// Send verification/welcome email via backend task
+		group := crew.NewTaskGroup("", "Welcome User "+createdUser.ID)
+		taskGroupCreateError := controller.crewContoller.CreateTaskGroup(group)
+		if taskGroupCreateError != nil {
+			log.Print(taskGroupCreateError)
+		}
 
+		task := crew.NewTask()
+		task.TaskGroupId = group.Id
+		task.Name = "Send Verification Email"
+		task.Worker = "verify-email"
+		task.Input = VerifyEmailJobInput{
+			UserId: createdUser.ID,
+		}
+		taskCreateError := controller.crewContoller.CreateTask(task)
+		if taskCreateError != nil {
+			log.Print(taskCreateError)
+		}
+
+		// Return result of registration action
 		return c.JSON(http.StatusOK, map[string]interface{}{
 			"token": token,
 			"id":    createdUser.ID,
@@ -130,21 +158,21 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 		}
 
 		// Always handle emails in lowercase on the backend
-		email := strings.ToLower(body.Email)
+		email := strings.ToLower(body.Input.Email)
 		if email == "" {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": "Email is required.",
 			})
 		}
 
-		password := body.Password
+		password := body.Input.Password
 		if password == "" {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": "Password is required.",
 			})
 		}
 
-		user, findUserError := controller.client.Users.FindUnique(db.Users.Email.Equals(email)).Exec(context.Background())
+		user, findUserError := controller.client.Users.FindUnique(db.Users.Email.Equals(email)).Exec(c.Request().Context())
 		if findUserError != nil {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": "User not found.",
