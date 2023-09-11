@@ -33,6 +33,20 @@ type LoginBody struct {
 	Input LoginBodyInput `json:"input"`
 }
 
+type VerifyEmailBody struct {
+	Input VerifyEmailBodyInput `json:"input"`
+}
+
+type VerifyEmailBodyInput struct {
+	Code string `json:"code"`
+}
+
+type UserSessionBody struct {
+	SessionVariables struct {
+		XHasuraUserId string `json:"x-hasura-user-id"`
+	} `json:"session_variables"`
+}
+
 type ActionsController struct {
 	client        *db.PrismaClient
 	crewContoller *crew.TaskController
@@ -58,6 +72,21 @@ func generateTokenForUser(user db.UsersModel) (string, error) {
 		"password_at": user.PasswordAt.String(),
 	})
 	return token.SignedString(key)
+}
+
+// NOTE : requests sent with hasura console need x-hasura-admin-secret request header unchecked.
+// If x-hasura-admin-secret is checked, only x-hasura-role=admin var is sent in body.
+func getUserForRequest(c echo.Context, client *db.PrismaClient) (*db.UsersModel, error) {
+	body := UserSessionBody{}
+	bodyErr := json.NewDecoder(c.Request().Body).Decode(&body)
+	if bodyErr != nil {
+		return nil, bodyErr
+	}
+	user, findUserError := client.Users.FindUnique(db.Users.ID.Equals(body.SessionVariables.XHasuraUserId)).Exec(c.Request().Context())
+	if findUserError != nil {
+		return nil, findUserError
+	}
+	return user, nil
 }
 
 func (controller *ActionsController) Run(e *echo.Echo) error {
@@ -192,6 +221,67 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 			"id":    user.ID,
 		})
 	})
+
+	e.POST("/hasura/actions/resendVerificationEmail", func(c echo.Context) error {
+		user, userError := getUserForRequest(c, controller.client)
+		if userError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": userError.Error(),
+			})
+		}
+		if user == nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "User not found.",
+			})
+		}
+
+		// Send verification email via backend task
+		group := crew.NewTaskGroup("", "Re-verify User "+user.ID)
+		taskGroupCreateError := controller.crewContoller.CreateTaskGroup(group)
+		if taskGroupCreateError != nil {
+			log.Print(taskGroupCreateError)
+		}
+
+		task := crew.NewTask()
+		task.TaskGroupId = group.Id
+		task.Name = "Re-Send Verification Email"
+		task.Worker = "verify-email"
+		task.Input = VerifyEmailJobInput{
+			UserId: user.ID,
+		}
+		taskCreateError := controller.crewContoller.CreateTask(task)
+		if taskCreateError != nil {
+			log.Print(taskCreateError)
+		}
+
+		return c.JSON(http.StatusOK, true)
+	})
+
+	e.POST("/hasura/actions/verifyEmail", func(c echo.Context) error {
+		// Body should contain email
+		body := VerifyEmailBody{}
+		bodyErr := json.NewDecoder(c.Request().Body).Decode(&body)
+		if bodyErr != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "code is required.",
+			})
+		}
+
+		_, verifyError := controller.client.Users.FindMany(
+			db.Users.EmailVerificationCode.Equals(body.Input.Code),
+		).Update(
+			db.Users.EmailVerified.Set(true),
+			db.Users.EmailVerificationCode.SetOptional(nil),
+		).Exec(c.Request().Context())
+		if verifyError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": verifyError.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusOK, true)
+	})
+
 	return nil
 }
 
