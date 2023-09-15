@@ -12,6 +12,7 @@ import (
 	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	goredislib "github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -47,15 +48,42 @@ type UserSessionBody struct {
 	} `json:"session_variables"`
 }
 
+type PasswordResetRequestBody struct {
+	Input struct {
+		Email string `json:"email"`
+	} `json:"input"`
+}
+
+type PasswordResetBody struct {
+	Input struct {
+		Email       string `json:"email"`
+		NewPassword string `json:"newPassword"`
+		Code        string `json:"code"`
+	} `json:"input"`
+}
+
 type ActionsController struct {
 	client        *db.PrismaClient
 	crewContoller *crew.TaskController
+	cache         *goredislib.Client
 }
 
 func NewActionsController(e *echo.Echo, crewController *crew.TaskController) *ActionsController {
+	redisAddress := os.Getenv("REDIS_ADDRESS")
+	if redisAddress == "" {
+		redisAddress = "localhost:6379"
+	}
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	redisDB := 0
+
 	controller := ActionsController{
 		client:        db.NewClient(),
 		crewContoller: crewController,
+		cache: goredislib.NewClient(&goredislib.Options{
+			Addr:     redisAddress,
+			Password: redisPassword,
+			DB:       redisDB,
+		}),
 	}
 	return &controller
 }
@@ -142,31 +170,20 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 			})
 		}
 
+		taskCreateError := CreateCrewTask(controller.crewContoller, "Send initial verification email to user "+createdUser.ID, "verify-email", VerifyEmailJobInput{
+			UserId: createdUser.ID,
+		})
+		if taskCreateError != nil {
+			// Only log error here and do not blow up entire call if task create fails. Users can request re-send.
+			log.Print(taskCreateError)
+		}
+
 		// create auth token for user
 		token, tokenErr := generateTokenForUser(*createdUser)
 		if tokenErr != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 				"message": tokenErr.Error(),
 			})
-		}
-
-		// Send verification/welcome email via backend task
-		group := crew.NewTaskGroup("", "Welcome User "+createdUser.ID)
-		taskGroupCreateError := controller.crewContoller.CreateTaskGroup(group)
-		if taskGroupCreateError != nil {
-			log.Print(taskGroupCreateError)
-		}
-
-		task := crew.NewTask()
-		task.TaskGroupId = group.Id
-		task.Name = "Send Verification Email"
-		task.Worker = "verify-email"
-		task.Input = VerifyEmailJobInput{
-			UserId: createdUser.ID,
-		}
-		taskCreateError := controller.crewContoller.CreateTask(task)
-		if taskCreateError != nil {
-			log.Print(taskCreateError)
 		}
 
 		// Return result of registration action
@@ -236,22 +253,13 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 		}
 
 		// Send verification email via backend task
-		group := crew.NewTaskGroup("", "Re-verify User "+user.ID)
-		taskGroupCreateError := controller.crewContoller.CreateTaskGroup(group)
-		if taskGroupCreateError != nil {
-			log.Print(taskGroupCreateError)
-		}
-
-		task := crew.NewTask()
-		task.TaskGroupId = group.Id
-		task.Name = "Re-Send Verification Email"
-		task.Worker = "verify-email"
-		task.Input = VerifyEmailJobInput{
+		taskCreateError := CreateCrewTask(controller.crewContoller, "Send verification email to user "+user.ID, "verify-email", VerifyEmailJobInput{
 			UserId: user.ID,
-		}
-		taskCreateError := controller.crewContoller.CreateTask(task)
+		})
 		if taskCreateError != nil {
-			log.Print(taskCreateError)
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": taskCreateError.Error(),
+			})
 		}
 
 		return c.JSON(http.StatusOK, true)
@@ -277,6 +285,86 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": verifyError.Error(),
 			})
+		}
+
+		return c.JSON(http.StatusOK, true)
+	})
+
+	e.POST("/hasura/actions/sendPasswordResetEmail", func(c echo.Context) error {
+		// Body should contain email
+		body := PasswordResetRequestBody{}
+		bodyErr := json.NewDecoder(c.Request().Body).Decode(&body)
+		if bodyErr != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "email is required.",
+			})
+		}
+
+		user, userError := controller.client.Users.FindUnique(db.Users.Email.Equals(body.Input.Email)).Exec(c.Request().Context())
+		if userError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": userError.Error(),
+			})
+		}
+
+		// Send verification/welcome email via backend task
+		taskCreateError := CreateCrewTask(controller.crewContoller, "Password reset email for user "+user.ID, "password-reset-email", ResetPasswordEmailJobInput{
+			UserId: user.ID,
+		})
+		// We should send an error back if task fails to create as user will never get email
+		if taskCreateError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": taskCreateError.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusOK, true)
+	})
+
+	e.POST("/hasura/actions/resetPassword", func(c echo.Context) error {
+		// Body should contain email
+		body := PasswordResetBody{}
+		bodyErr := json.NewDecoder(c.Request().Body).Decode(&body)
+		if bodyErr != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "email, newPassword, and code are all required.",
+			})
+		}
+
+		user, userError := controller.client.Users.FindFirst(db.Users.Email.Equals(body.Input.Email), db.Users.PasswordResetCode.Equals(body.Input.Code)).Exec(c.Request().Context())
+		if userError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": userError.Error(),
+			})
+		}
+
+		hashedPassword, hashError := bcrypt.GenerateFromPassword([]byte(body.Input.NewPassword), 10)
+		if hashError != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"message": hashError.Error(),
+			})
+		}
+
+		_, updateError := controller.client.Users.FindUnique(db.Users.ID.Equals(user.ID)).Update(
+			db.Users.PasswordResetCode.SetOptional(nil),
+			db.Users.HashedPassword.Set(string(hashedPassword))).Exec(c.Request().Context())
+
+		if updateError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": updateError.Error(),
+			})
+		}
+
+		// Clear cached auth tokens for this user. Tokens are cached with prefix "userId:"
+		FlushRedisPrefix(controller.cache, user.ID+":")
+
+		// Send password changed email
+		taskCreateError := CreateCrewTask(controller.crewContoller, "Password changed email for user "+user.ID, "password-changed-email", PasswordChangedEmailJobInput{
+			UserId: user.ID,
+		})
+		if taskCreateError != nil {
+			// Only log error here and do not blow up entire call if task create fails since password was already reset.
+			log.Print(taskCreateError)
 		}
 
 		return c.JSON(http.StatusOK, true)

@@ -40,17 +40,22 @@ func NewAuthController(e *echo.Echo) *AuthController {
 	return &controller
 }
 
-func authToken(controller *AuthController, token string, c echo.Context) error {
-	// Check for cached value in redis
-	cachedResponseStr, cachedResponseError := controller.cache.Get(context.Background(), token).Bytes()
-	if cachedResponseError == nil {
-		cachedResponse := map[string]interface{}{}
-		cachedResponseUnmarshalError := json.Unmarshal(cachedResponseStr, &cachedResponse)
-		if cachedResponseUnmarshalError == nil {
-			return c.JSON(http.StatusOK, cachedResponse)
+func FlushRedisPrefix(client *goredislib.Client, prefix string) error {
+	keys, err := client.Keys(context.Background(), prefix+"*").Result()
+	if err != nil {
+		return err
+	}
+	if len(keys) > 0 {
+		_, err := client.Del(context.Background(), keys...).Result()
+		if err != nil {
+			return err
 		}
 	}
+	return nil
+}
 
+func authToken(controller *AuthController, token string, c echo.Context) error {
+	// Parse the token
 	parsed, tokenError := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		keyStr := os.Getenv("JWT_TOKEN_KEY")
 		if keyStr == "" {
@@ -80,7 +85,19 @@ func authToken(controller *AuthController, token string, c echo.Context) error {
 		})
 	}
 
-	// Check if user exists
+	cacheKey := userId + ":" + token
+
+	// Check for cached value in redis
+	cachedResponseStr, cachedResponseError := controller.cache.Get(context.Background(), cacheKey).Bytes()
+	if cachedResponseError == nil {
+		cachedResponse := map[string]interface{}{}
+		cachedResponseUnmarshalError := json.Unmarshal(cachedResponseStr, &cachedResponse)
+		if cachedResponseUnmarshalError == nil {
+			return c.JSON(http.StatusOK, cachedResponse)
+		}
+	}
+
+	// No cached response for token, check if user exists
 	user, userErr := controller.client.Users.FindUnique(db.Users.ID.Equals(userId)).Exec(context.Background())
 	if userErr != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
@@ -106,7 +123,7 @@ func authToken(controller *AuthController, token string, c echo.Context) error {
 
 	// Cache response
 	responseJson, _ := json.Marshal(response)
-	redisErr := controller.cache.Set(context.Background(), token, responseJson, time.Duration(time.Minute*60)).Err()
+	redisErr := controller.cache.Set(context.Background(), cacheKey, responseJson, time.Duration(time.Minute*60)).Err()
 	if redisErr != nil {
 		log.Print(redisErr)
 	}
