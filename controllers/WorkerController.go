@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"aaronblondeau.com/hasura-base-go/controllers/lib"
@@ -40,6 +41,18 @@ type ResetPasswordEmailJobInput struct {
 
 type PasswordChangedEmailJobInput struct {
 	UserId string `json:"userId"`
+}
+
+type UserDestroyedEmailJobInput struct {
+	Email string `json:"email"`
+}
+
+type UserDestroyedCleanupFilesJobInput struct {
+	UserId string `json:"userId"`
+}
+
+type ContactFormNotifyAdminsJobInput struct {
+	SubmissionId string `json:"submissionId"`
 }
 
 // https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
@@ -242,6 +255,137 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 		emailSendError := lib.SendEmail(from, user.Email, "AppName password changed", htmlBody.String())
 		if emailSendError != nil {
 			return c.JSON(http.StatusBadRequest, emailSendError.Error())
+		}
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": true,
+		})
+	})
+
+	e.POST("/crew/worker/user-destroyed-email", func(c echo.Context) error {
+		token := c.Request().Header.Get("Authorization")
+		expectedToken := os.Getenv("CREW_WORKER_AUTHORIZATION_HEADER")
+
+		if token != expectedToken {
+			return c.String(http.StatusUnauthorized, "Unauthorized")
+		}
+
+		payload := crew.WorkerPayload{}
+		json.NewDecoder(c.Request().Body).Decode(&payload)
+
+		payloadInput, ok := payload.Input.(map[string]interface{})
+		if !ok {
+			return c.JSON(http.StatusBadRequest, "Invalid payload")
+		}
+		email := payloadInput["email"].(string)
+		log.Println("~~ user-destroyed-email worker", email)
+
+		// Build the email content
+		// Note, email templates are embedded : https://pkg.go.dev/embed
+		// To debug template with local fs, use this:
+		// t, _ := template.ParseFiles("./emails/user-destroyed.html")
+		t, _ := template.ParseFS(controller.emailTemplates, "emails/user-destroyed.html")
+		var htmlBody bytes.Buffer
+
+		t.Execute(&htmlBody, nil)
+
+		// Send the email
+		from := os.Getenv("EMAIL_SENDER")
+		emailSendError := lib.SendEmail(from, email, "AppName account destroyed", htmlBody.String())
+		if emailSendError != nil {
+			return c.JSON(http.StatusBadRequest, emailSendError.Error())
+		}
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": true,
+		})
+	})
+
+	e.POST("/crew/worker/user-destroyed-cleanup-files", func(c echo.Context) error {
+		token := c.Request().Header.Get("Authorization")
+		expectedToken := os.Getenv("CREW_WORKER_AUTHORIZATION_HEADER")
+
+		if token != expectedToken {
+			return c.String(http.StatusUnauthorized, "Unauthorized")
+		}
+
+		payload := crew.WorkerPayload{}
+		json.NewDecoder(c.Request().Body).Decode(&payload)
+
+		payloadInput, ok := payload.Input.(map[string]interface{})
+		if !ok {
+			return c.JSON(http.StatusBadRequest, "Invalid payload")
+		}
+		userId := payloadInput["userId"].(string)
+		log.Println("~~ user-destroyed-cleanup-files worker", userId)
+
+		// TODO - cleanup all files in user-public bucket with prefix userId/
+		// xxx
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": true,
+		})
+	})
+
+	e.POST("/crew/worker/contact-form-notify-admins", func(c echo.Context) error {
+		token := c.Request().Header.Get("Authorization")
+		expectedToken := os.Getenv("CREW_WORKER_AUTHORIZATION_HEADER")
+
+		if token != expectedToken {
+			return c.String(http.StatusUnauthorized, "Unauthorized")
+		}
+
+		payload := crew.WorkerPayload{}
+		json.NewDecoder(c.Request().Body).Decode(&payload)
+
+		payloadInput, ok := payload.Input.(map[string]interface{})
+		if !ok {
+			return c.JSON(http.StatusBadRequest, "Invalid payload")
+		}
+		submissionId := payloadInput["submissionId"].(string)
+		log.Println("~~ contact-form-notify-admins worker", submissionId)
+
+		// Fetch the submission
+		submission, submissionErr := controller.client.ContactFormSubmissions.FindUnique(db.ContactFormSubmissions.ID.Equals(submissionId)).Exec(c.Request().Context())
+		if submissionErr != nil {
+			return c.JSON(http.StatusBadRequest, submissionErr.Error())
+		}
+
+		// Build the email content
+		// Note, email templates are embedded : https://pkg.go.dev/embed
+		// To debug template with local fs, use this:
+		// t, _ := template.ParseFiles("./emails/contact-form-submission.html")
+		t, _ := template.ParseFS(controller.emailTemplates, "emails/contact-form-submission.html")
+		var htmlBody bytes.Buffer
+
+		submissionName, nameOk := submission.Name()
+		if !nameOk {
+			submissionName = "?"
+		}
+
+		t.Execute(&htmlBody, struct {
+			Name    string
+			Email   string
+			Message string
+		}{
+			Name:    submissionName,
+			Email:   submission.Email,
+			Message: submission.Message,
+		})
+
+		recipientsEnv := os.Getenv("CONTACT_FORM_RECIPIENT_EMAILS")
+		if recipientsEnv == "" {
+			recipientsEnv = "admin@AppName.com"
+		}
+		recipients := strings.Split(recipientsEnv, ",")
+
+		// Send the email(s)
+		for _, recipient := range recipients {
+			from := os.Getenv("EMAIL_SENDER")
+			emailSendError := lib.SendEmail(from, recipient, "AppName Contact Form Submission", htmlBody.String())
+			if emailSendError != nil {
+				return c.JSON(http.StatusBadRequest, emailSendError.Error())
+			}
 		}
 
 		return c.JSON(http.StatusOK, map[string]interface{}{

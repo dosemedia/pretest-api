@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -62,6 +64,26 @@ type PasswordResetBody struct {
 	} `json:"input"`
 }
 
+type PasswordChangeBody struct {
+	Input struct {
+		OldPassword string `json:"oldPassword"`
+		NewPassword string `json:"newPassword"`
+	} `json:"input"`
+}
+
+type EmailChangeBody struct {
+	Input struct {
+		Password string `json:"password"`
+		NewEmail string `json:"newEmail"`
+	} `json:"input"`
+}
+
+type DestroyUserBody struct {
+	Input struct {
+		Password string `json:"password"`
+	} `json:"input"`
+}
+
 type ActionsController struct {
 	client        *db.PrismaClient
 	crewContoller *crew.TaskController
@@ -104,9 +126,9 @@ func generateTokenForUser(user db.UsersModel) (string, error) {
 
 // NOTE : requests sent with hasura console need x-hasura-admin-secret request header unchecked.
 // If x-hasura-admin-secret is checked, only x-hasura-role=admin var is sent in body.
-func getUserForRequest(c echo.Context, client *db.PrismaClient) (*db.UsersModel, error) {
+func getUserForRequest(c echo.Context, bodyBytes []byte, client *db.PrismaClient) (*db.UsersModel, error) {
 	body := UserSessionBody{}
-	bodyErr := json.NewDecoder(c.Request().Body).Decode(&body)
+	bodyErr := json.Unmarshal(bodyBytes, &body)
 	if bodyErr != nil {
 		return nil, bodyErr
 	}
@@ -114,7 +136,49 @@ func getUserForRequest(c echo.Context, client *db.PrismaClient) (*db.UsersModel,
 	if findUserError != nil {
 		return nil, findUserError
 	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
 	return user, nil
+}
+
+func changePassword(c echo.Context, controller *ActionsController, user *db.UsersModel, newPassword string) error {
+	if len(newPassword) < 5 {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "New password must be at least 5 characters long.",
+		})
+	}
+
+	hashedPassword, hashError := bcrypt.GenerateFromPassword([]byte(newPassword), 10)
+	if hashError != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"message": hashError.Error(),
+		})
+	}
+
+	_, updateError := controller.client.Users.FindUnique(db.Users.ID.Equals(user.ID)).Update(
+		db.Users.PasswordResetCode.SetOptional(nil),
+		db.Users.HashedPassword.Set(string(hashedPassword))).Exec(c.Request().Context())
+
+	if updateError != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": updateError.Error(),
+		})
+	}
+
+	// Clear cached auth tokens for this user. Tokens are cached with prefix "userId:"
+	FlushRedisPrefix(controller.cache, user.ID+":")
+
+	// Send password changed email
+	taskCreateError := CreateCrewTask(controller.crewContoller, "Password changed email for user "+user.ID, "password-changed-email", PasswordChangedEmailJobInput{
+		UserId: user.ID,
+	})
+	if taskCreateError != nil {
+		// Only log error here and do not blow up entire call if task create fails since password was already reset.
+		log.Print(taskCreateError)
+	}
+
+	return nil
 }
 
 func (controller *ActionsController) Run(e *echo.Echo) error {
@@ -225,6 +289,13 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 			})
 		}
 
+		passwordMatchError := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password))
+		if passwordMatchError != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"message": "Email or password did not match.",
+			})
+		}
+
 		// create auth token for user
 		token, tokenErr := generateTokenForUser(*user)
 		if tokenErr != nil {
@@ -240,15 +311,16 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 	})
 
 	e.POST("/hasura/actions/resendVerificationEmail", func(c echo.Context) error {
-		user, userError := getUserForRequest(c, controller.client)
+		bodyBytes, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": err.Error(),
+			})
+		}
+		user, userError := getUserForRequest(c, bodyBytes, controller.client)
 		if userError != nil {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": userError.Error(),
-			})
-		}
-		if user == nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{
-				"message": "User not found.",
 			})
 		}
 
@@ -338,33 +410,181 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 			})
 		}
 
-		hashedPassword, hashError := bcrypt.GenerateFromPassword([]byte(body.Input.NewPassword), 10)
-		if hashError != nil {
+		changePassError := changePassword(c, controller, user, body.Input.NewPassword)
+		if changePassError != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-				"message": hashError.Error(),
+				"message": changePassError.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusOK, true)
+	})
+
+	e.POST("/hasura/actions/changePassword", func(c echo.Context) error {
+		bodyBytes, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": err.Error(),
+			})
+		}
+		user, userError := getUserForRequest(c, bodyBytes, controller.client)
+		if userError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": userError.Error(),
+			})
+		}
+
+		body := PasswordChangeBody{}
+		bodyErr := json.Unmarshal(bodyBytes, &body)
+		if bodyErr != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "newPassword and oldPasssword are required.",
+			})
+		}
+
+		oldPassword := body.Input.OldPassword
+
+		passwordMatchError := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(oldPassword))
+		if passwordMatchError != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"message": "Old password did not match.",
+			})
+		}
+
+		newPassword := body.Input.NewPassword
+
+		changePassError := changePassword(c, controller, user, newPassword)
+		if changePassError != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"message": changePassError.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusOK, true)
+	})
+
+	e.POST("/hasura/actions/changeEmail", func(c echo.Context) error {
+		bodyBytes, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": err.Error(),
+			})
+		}
+		user, userError := getUserForRequest(c, bodyBytes, controller.client)
+		if userError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": userError.Error(),
+			})
+		}
+
+		body := EmailChangeBody{}
+		bodyErr := json.Unmarshal(bodyBytes, &body)
+		if bodyErr != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "password and email are required.",
+			})
+		}
+
+		password := body.Input.Password
+		passwordMatchError := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password))
+		if passwordMatchError != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"message": "Password did not match.",
+			})
+		}
+
+		newEmail := body.Input.NewEmail
+		if newEmail == "" {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "New email is required.",
+			})
+		}
+		if newEmail == user.Email {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "Cannot use same email.",
 			})
 		}
 
 		_, updateError := controller.client.Users.FindUnique(db.Users.ID.Equals(user.ID)).Update(
-			db.Users.PasswordResetCode.SetOptional(nil),
-			db.Users.HashedPassword.Set(string(hashedPassword))).Exec(c.Request().Context())
-
+			db.Users.Email.Set(newEmail),
+			db.Users.EmailVerified.Set(false),
+		).Exec(c.Request().Context())
 		if updateError != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 				"message": updateError.Error(),
 			})
 		}
 
-		// Clear cached auth tokens for this user. Tokens are cached with prefix "userId:"
-		FlushRedisPrefix(controller.cache, user.ID+":")
-
-		// Send password changed email
-		taskCreateError := CreateCrewTask(controller.crewContoller, "Password changed email for user "+user.ID, "password-changed-email", PasswordChangedEmailJobInput{
+		taskCreateError := CreateCrewTask(controller.crewContoller, "Send email change verification to user "+user.ID, "verify-email", VerifyEmailJobInput{
 			UserId: user.ID,
 		})
 		if taskCreateError != nil {
-			// Only log error here and do not blow up entire call if task create fails since password was already reset.
+			// Only log error here and do not blow up entire call if task create fails. Users can request re-send.
 			log.Print(taskCreateError)
+		}
+
+		return c.JSON(http.StatusOK, true)
+	})
+
+	e.POST("/hasura/actions/destroyUser", func(c echo.Context) error {
+		bodyBytes, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": err.Error(),
+			})
+		}
+		user, userError := getUserForRequest(c, bodyBytes, controller.client)
+		if userError != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": userError.Error(),
+			})
+		}
+
+		body := DestroyUserBody{}
+		bodyErr := json.Unmarshal(bodyBytes, &body)
+		if bodyErr != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "password is required.",
+			})
+		}
+
+		password := body.Input.Password
+		passwordMatchError := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password))
+		if passwordMatchError != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"message": "Password did not match.",
+			})
+		}
+
+		email := user.Email
+		userId := user.ID
+
+		_, deleteError := controller.client.Users.FindUnique(db.Users.ID.Equals(user.ID)).Delete().Exec(c.Request().Context())
+		if deleteError != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"message": deleteError.Error(),
+			})
+		}
+
+		// Clear cached auth tokens for this user. Tokens are cached with prefix "userId:"
+		FlushRedisPrefix(controller.cache, userId+":")
+
+		// Send user deleted email
+		emailTaskCreateError := CreateCrewTask(controller.crewContoller, "Send user deleted email for "+user.ID, "user-destroyed-email", UserDestroyedEmailJobInput{
+			Email: email,
+		})
+		if emailTaskCreateError != nil {
+			// Only log error here and do not blow up entire call if task create fails. Users can request re-send.
+			log.Print(emailTaskCreateError)
+		}
+
+		// Create a task to cleanup user files
+		filesCleanupTaskCreateError := CreateCrewTask(controller.crewContoller, "Cleanup user files for "+user.ID, "user-destroyed-cleanup-files", UserDestroyedCleanupFilesJobInput{
+			UserId: userId,
+		})
+		if filesCleanupTaskCreateError != nil {
+			// Only log error here and do not blow up entire call if task create fails. Users can request re-send.
+			log.Print(filesCleanupTaskCreateError)
 		}
 
 		return c.JSON(http.StatusOK, true)

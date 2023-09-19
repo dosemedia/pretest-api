@@ -146,6 +146,16 @@ func main() {
 		panic(err)
 	}
 
+	eventsController := controllers.NewEventsController(e, crewController)
+	if err := eventsController.Run(e); err != nil {
+		panic(err)
+	}
+
+	fileStorageController := controllers.NewFileStorageController(e)
+	if err := fileStorageController.Run(e); err != nil {
+		panic(err)
+	}
+
 	// Hook into the shutdown signal
 	cleanupCompleteWg := sync.WaitGroup{}
 	done := make(chan os.Signal, 1)

@@ -55,6 +55,12 @@ func FlushRedisPrefix(client *goredislib.Client, prefix string) error {
 }
 
 func authToken(controller *AuthController, token string, c echo.Context) error {
+	if token == "" {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"X-Hasura-Role": "public",
+		})
+	}
+
 	// Parse the token
 	parsed, tokenError := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		keyStr := os.Getenv("JWT_TOKEN_KEY")
