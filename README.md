@@ -1,6 +1,6 @@
 # Hasura Base
 
-This is a starter project that uses TODO.
+This is a starter project that uses Go as a companion server for Hasura.
 
 For a node.js based version see : [https://github.com/aaronblondeau/hasura-base](https://github.com/aaronblondeau/hasura-base)
 
@@ -14,7 +14,7 @@ Authentication is handled by Hasura and JWTs.
 go get
 ```
 
-TODO : https://hasura.io/docs/latest/hasura-cli/install-hasura-cli/
+Also install the hasura cli : https://hasura.io/docs/latest/hasura-cli/install-hasura-cli/
 
 2. Copy .env.example to .env and update values (note "TODO" values).  The S3 secret and key will be updated in step 4 below.
 

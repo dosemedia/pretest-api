@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"image"
+	"image/png"
 	"log"
 	"mime"
 	"net/http"
@@ -15,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/disintegration/imaging"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -60,13 +64,8 @@ func getUserFromAuthHeader(c echo.Context, client *db.PrismaClient) (*db.UsersMo
 	return client.Users.FindUnique(db.Users.ID.Equals(userId)).Exec(c.Request().Context())
 }
 
-func (controller *FileStorageController) Run(e *echo.Echo) error {
-
-	if err := controller.client.Prisma.Connect(); err != nil {
-		return err
-	}
-
-	// // Note, only use endpoint when pointing at minio
+func getUserPublicS3Client() (*s3.Client, string, string, string, error) {
+	// Note, only use endpoint when pointing at minio
 	userPublicEndpoint := os.Getenv("S3_USER_PUBLIC_ENDPOINT")
 	userPublicRegion := os.Getenv("S3_USER_PUBLIC_REGION")
 
@@ -101,7 +100,7 @@ func (controller *FileStorageController) Run(e *echo.Echo) error {
 		// REAL S3 (TODO UNTESTED!)
 		cfg, err := config.LoadDefaultConfig(context.Background(), config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(os.Getenv("S3_ACCESS_KEY"), os.Getenv("S3_SECRET_KEY"), "")))
 		if err != nil {
-			log.Fatal(err)
+			return nil, "", "", "", err
 		}
 		userPublicS3Client = s3.NewFromConfig(cfg, func(o *s3.Options) {
 			if userPublicEndpoint != "" {
@@ -111,13 +110,24 @@ func (controller *FileStorageController) Run(e *echo.Echo) error {
 			o.Region = userPublicRegion
 		})
 	}
+	return userPublicS3Client, userPublicBucket, userPublicEndpoint, userPublicRegion, nil
+}
+
+func (controller *FileStorageController) Run(e *echo.Echo) error {
+
+	if err := controller.client.Prisma.Connect(); err != nil {
+		return err
+	}
+
+	userPublicS3Client, userPublicBucket, userPublicEndpoint, userPublicRegion, userPublicS3ClientError := getUserPublicS3Client()
+	if userPublicS3ClientError != nil {
+		return userPublicS3ClientError
+	}
 
 	e.POST("/files/user-avatar", func(c echo.Context) error {
 		user, userError := getUserFromAuthHeader(c, controller.client)
 		if userError != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{
-				"message": userError.Error(),
-			})
+			return c.String(http.StatusUnauthorized, userError.Error())
 		}
 
 		// https://echo.labstack.com/docs/cookbook/file-upload
@@ -137,7 +147,7 @@ func (controller *FileStorageController) Run(e *echo.Echo) error {
 		mtype := mime.TypeByExtension(ext)
 		key := user.ID + "/" + uuid.New().String() + ext
 
-		// Perform an upload.
+		// Perform an upload to S3
 		// https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/gov2/s3/actions/bucket_basics.go#L100
 		_, uploadErr := userPublicS3Client.PutObject(context.Background(), &s3.PutObjectInput{
 			Bucket: aws.String(userPublicBucket),
@@ -145,9 +155,17 @@ func (controller *FileStorageController) Run(e *echo.Echo) error {
 			Body:   src,
 		})
 		if uploadErr != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-				"message": uploadErr.Error(),
-			})
+			return c.String(http.StatusInternalServerError, uploadErr.Error())
+		}
+
+		// Save file key to user profile
+		_, updateUserError := controller.client.Users.FindUnique(
+			db.Users.ID.Equals(user.ID),
+		).Update(
+			db.Users.AvatarFileKey.Set(key),
+		).Exec(c.Request().Context())
+		if updateUserError != nil {
+			return c.String(http.StatusInternalServerError, updateUserError.Error())
 		}
 
 		// This response needs to look like a multer file (node.js)
@@ -167,13 +185,55 @@ func (controller *FileStorageController) Run(e *echo.Echo) error {
 		userId := c.Param("userId")
 		fileId := c.Param("fileId")
 
-		// TODO
-
-		return c.JSON(http.StatusOK, map[string]interface{}{
-			"todo":   true,
-			"userId": userId,
-			"fileId": fileId,
+		result, getObjectError := userPublicS3Client.GetObject(c.Request().Context(), &s3.GetObjectInput{
+			Bucket: aws.String(userPublicBucket),
+			Key:    aws.String(userId + "/" + fileId),
 		})
+		if getObjectError != nil {
+			return c.String(http.StatusInternalServerError, getObjectError.Error())
+		}
+		defer result.Body.Close()
+
+		// // To return raw image from s3:
+		// return c.Stream(http.StatusOK, *result.ContentType, result.Body)
+
+		// Resize image:
+		src, _, decodeError := image.Decode(result.Body)
+		if decodeError != nil {
+			return c.String(http.StatusInternalServerError, decodeError.Error())
+		}
+
+		// resize input image
+		dst := imaging.Resize(src, 200, 200, imaging.Lanczos)
+
+		encoded := &bytes.Buffer{}
+		encodedError := png.Encode(encoded, dst)
+		if encodedError != nil {
+			return c.String(http.StatusInternalServerError, encodedError.Error())
+		}
+
+		return c.Stream(http.StatusOK, *result.ContentType, encoded)
+
+		// // Save to a temp file and return (for use with image processing libs that need a file path)
+
+		// file, fileErr := os.CreateTemp("", fileId)
+		// if fileErr != nil {
+		// 	return c.String(http.StatusInternalServerError, fileErr.Error())
+		// }
+		// defer file.Close()
+		// // Doesn't work on windows - why?
+		// defer os.Remove(file.Name())
+
+		// body, readErr := io.ReadAll(result.Body)
+		// if readErr != nil {
+		// 	return c.String(http.StatusInternalServerError, readErr.Error())
+		// }
+		// _, fileWriteErr := file.Write(body)
+		// if fileWriteErr != nil {
+		// 	return c.String(http.StatusInternalServerError, fileWriteErr.Error())
+		// }
+
+		// return c.File(file.Name())
 	})
 
 	return nil

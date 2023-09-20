@@ -9,8 +9,9 @@ require (
 	github.com/aaronblondeau/crew-go v1.0.4
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.40
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.38
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.5
-	github.com/gabriel-vasile/mimetype v1.4.2
+	github.com/disintegration/imaging v1.6.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
@@ -23,12 +24,11 @@ require (
 	github.com/steebchen/prisma-client-go v0.21.0
 	github.com/takuoki/gocase v1.0.0
 	golang.org/x/crypto v0.11.0
-	golang.org/x/text v0.11.0
+	golang.org/x/text v0.13.0
 )
 
 require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.13 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.38 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35 // indirect
@@ -55,6 +55,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
+	golang.org/x/image v0.12.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect

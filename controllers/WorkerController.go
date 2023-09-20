@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"encoding/json"
 	"html/template"
@@ -15,6 +16,8 @@ import (
 	"aaronblondeau.com/hasura-base-go/controllers/lib"
 	"aaronblondeau.com/hasura-base-go/prisma/db"
 	"github.com/aaronblondeau/crew-go/crew"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/labstack/echo/v4"
 )
 
@@ -319,8 +322,30 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 		userId := payloadInput["userId"].(string)
 		log.Println("~~ user-destroyed-cleanup-files worker", userId)
 
-		// TODO - cleanup all files in user-public bucket with prefix userId/
-		// xxx
+		// cleanup all files in user-public bucket with prefix userId/
+		userPublicS3Client, userPublicBucket, _, _, userPublicS3ClientError := getUserPublicS3Client()
+		if userPublicS3ClientError != nil {
+			return c.String(http.StatusInternalServerError, userPublicS3ClientError.Error())
+		}
+
+		listResult, listResultError := userPublicS3Client.ListObjectsV2(context.Background(), &s3.ListObjectsV2Input{
+			Bucket: aws.String(userPublicBucket),
+			Prefix: aws.String(userId + "/"),
+		})
+		if listResultError != nil {
+			return c.String(http.StatusInternalServerError, listResultError.Error())
+		}
+
+		for _, object := range listResult.Contents {
+			log.Println("~~ user-destroyed-cleanup-files worker deleting", *object.Key)
+			_, deleteError := userPublicS3Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+				Bucket: aws.String(userPublicBucket),
+				Key:    object.Key,
+			})
+			if deleteError != nil {
+				return c.String(http.StatusInternalServerError, deleteError.Error())
+			}
+		}
 
 		return c.JSON(http.StatusOK, map[string]interface{}{
 			"success": true,
