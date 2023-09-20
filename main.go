@@ -16,6 +16,7 @@ import (
 	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 //go:embed emails
@@ -28,6 +29,8 @@ func main() {
 	}
 
 	e := echo.New()
+
+	e.Use(middleware.CORS())
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "hasura-base-go!")
