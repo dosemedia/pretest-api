@@ -1,12 +1,12 @@
 module aaronblondeau.com/hasura-base-go
 
 // For local dev with crew-go in sibling folder:
-replace github.com/aaronblondeau/crew-go => ../../Dose/crew-go
+// replace github.com/aaronblondeau/crew-go => ../crew-go
 
 go 1.19
 
 require (
-	github.com/aaronblondeau/crew-go v1.0.4
+	github.com/aaronblondeau/crew-go v1.0.5
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.40
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.38
