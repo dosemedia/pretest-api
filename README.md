@@ -70,6 +70,29 @@ go run github.com/steebchen/prisma-client-go generate
 docker compose down
 ```
 
+## Email Templates
+
+Emails templates are managed with [maizzle](https://maizzle.com/).
+
+To develop email templates make sure you have Node.js installed and then:
+
+```
+cd email
+npm install
+npm run dev
+```
+
+Once the dev server has started, go to http://localhost:3050/.  Updates to templates will live reload!
+
+To build email templates
+
+```
+cd email
+npm run build
+```
+
+Note that email templates are embedded in the go executable so they must be generated before building or running "go run main.go".
+
 ## Troubleshooting
 
 https://goprisma.org/docs/getting-started/quickstart
