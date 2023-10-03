@@ -347,15 +347,21 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 			})
 		}
 
-		_, verifyError := controller.client.Users.FindMany(
+		res, verifyError := controller.client.Users.FindMany(
 			db.Users.EmailVerificationCode.Equals(body.Input.Code),
 		).Update(
 			db.Users.EmailVerified.Set(true),
 			db.Users.EmailVerificationCode.SetOptional(nil),
 		).Exec(c.Request().Context())
+
 		if verifyError != nil {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"message": verifyError.Error(),
+			})
+		}
+		if res.Count < 1 {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "invalid code",
 			})
 		}
 
