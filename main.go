@@ -19,7 +19,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-//go:embed emails
+//go:embed emails/build_production
 var emailTemplates embed.FS
 
 func main() {

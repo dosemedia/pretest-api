@@ -134,8 +134,18 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 		// Build the email content
 		// Note, email templates are embedded : https://pkg.go.dev/embed
 		// To debug template with local fs, use this:
-		// t, _ := template.ParseFiles("./emails/email-verify.html")
-		t, _ := template.ParseFS(controller.emailTemplates, "emails/email-verify.html")
+		// t, _ := template.ParseFiles("./emails/build_production/email-verify.html")
+
+		rawHtml, rawHtmlError := controller.emailTemplates.ReadFile("emails/build_production/email-verify.html")
+		if rawHtmlError != nil {
+			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
+		}
+		// Note, delims are changed to make to templates easier to use with Maizzle
+		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		if tError != nil {
+			return c.JSON(http.StatusBadRequest, tError.Error())
+		}
+
 		var htmlBody bytes.Buffer
 
 		verificationUrl := os.Getenv("WEB_BASE_URL") + "/verify-email/" + verificationCode
@@ -196,8 +206,18 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 		// Build the email content
 		// Note, email templates are embedded : https://pkg.go.dev/embed
 		// To debug template with local fs, use this:
-		// t, _ := template.ParseFiles("./emails/password-reset.html")
-		t, _ := template.ParseFS(controller.emailTemplates, "emails/password-reset.html")
+		// t, _ := template.ParseFiles("./emails/build_production/password-reset.html")
+
+		rawHtml, rawHtmlError := controller.emailTemplates.ReadFile("emails/build_production/password-reset.html")
+		if rawHtmlError != nil {
+			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
+		}
+		// Note, delims are changed to make to templates easier to use with Maizzle
+		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		if tError != nil {
+			return c.JSON(http.StatusBadRequest, tError.Error())
+		}
+
 		var htmlBody bytes.Buffer
 
 		resetPasswordUrl := os.Getenv("WEB_BASE_URL") + "/reset-password/" + resetCode
@@ -247,8 +267,18 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 		// Build the email content
 		// Note, email templates are embedded : https://pkg.go.dev/embed
 		// To debug template with local fs, use this:
-		// t, _ := template.ParseFiles("./emails/password-changed.html")
-		t, _ := template.ParseFS(controller.emailTemplates, "emails/password-changed.html")
+		// t, _ := template.ParseFiles("./emails/build_production/password-changed.html")
+
+		rawHtml, rawHtmlError := controller.emailTemplates.ReadFile("emails/build_production/password-changed.html")
+		if rawHtmlError != nil {
+			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
+		}
+		// Note, delims are changed to make to templates easier to use with Maizzle
+		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		if tError != nil {
+			return c.JSON(http.StatusBadRequest, tError.Error())
+		}
+
 		var htmlBody bytes.Buffer
 
 		t.Execute(&htmlBody, nil)
@@ -286,8 +316,18 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 		// Build the email content
 		// Note, email templates are embedded : https://pkg.go.dev/embed
 		// To debug template with local fs, use this:
-		// t, _ := template.ParseFiles("./emails/user-destroyed.html")
-		t, _ := template.ParseFS(controller.emailTemplates, "emails/user-destroyed.html")
+		// t, _ := template.ParseFiles("./emails/build_production/user-destroyed.html")
+
+		rawHtml, rawHtmlError := controller.emailTemplates.ReadFile("emails/build_production/user-destroyed.html")
+		if rawHtmlError != nil {
+			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
+		}
+		// Note, delims are changed to make to templates easier to use with Maizzle
+		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		if tError != nil {
+			return c.JSON(http.StatusBadRequest, tError.Error())
+		}
+
 		var htmlBody bytes.Buffer
 
 		t.Execute(&htmlBody, nil)
@@ -379,8 +419,18 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 		// Build the email content
 		// Note, email templates are embedded : https://pkg.go.dev/embed
 		// To debug template with local fs, use this:
-		// t, _ := template.ParseFiles("./emails/contact-form-submission.html")
-		t, _ := template.ParseFS(controller.emailTemplates, "emails/contact-form-submission.html")
+		// t, _ := template.ParseFiles("./emails/build_production/contact-form-submission.html")
+
+		rawHtml, rawHtmlError := controller.emailTemplates.ReadFile("emails/build_production/contact-form-submission.html")
+		if rawHtmlError != nil {
+			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
+		}
+		// Note, delims are changed to make to templates easier to use with Maizzle
+		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		if tError != nil {
+			return c.JSON(http.StatusBadRequest, tError.Error())
+		}
+
 		var htmlBody bytes.Buffer
 
 		submissionName, nameOk := submission.Name()
