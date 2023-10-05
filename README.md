@@ -77,7 +77,7 @@ Emails templates are managed with [maizzle](https://maizzle.com/).
 To develop email templates make sure you have Node.js installed and then:
 
 ```
-cd email
+cd emails
 npm install
 npm run dev
 ```
@@ -87,7 +87,7 @@ Once the dev server has started, go to http://localhost:3050/.  Updates to templ
 To build email templates
 
 ```
-cd email
+cd emails
 npm run build
 ```
 
