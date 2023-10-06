@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"aaronblondeau.com/hasura-base-go/prisma/db"
+	"github.com/aaronblondau/hasura-base-go/prisma/db"
 	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"

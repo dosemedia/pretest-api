@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"aaronblondeau.com/hasura-base-go/prisma/db"
+	"github.com/aaronblondau/hasura-base-go/prisma/db"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"

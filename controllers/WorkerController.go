@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"aaronblondeau.com/hasura-base-go/controllers/lib"
-	"aaronblondeau.com/hasura-base-go/prisma/db"
+	"github.com/aaronblondau/hasura-base-go/controllers/lib"
+	"github.com/aaronblondau/hasura-base-go/prisma/db"
 	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"

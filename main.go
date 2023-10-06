@@ -12,7 +12,7 @@ import (
 	"sync"
 	"syscall"
 
-	"aaronblondeau.com/hasura-base-go/controllers"
+	"github.com/aaronblondau/hasura-base-go/controllers"
 	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"

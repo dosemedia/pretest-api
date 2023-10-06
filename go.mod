@@ -1,4 +1,4 @@
-module aaronblondeau.com/hasura-base-go
+module github.com/aaronblondau/hasura-base-go
 
 // For local dev with crew-go in sibling folder:
 // replace github.com/aaronblondeau/crew-go => ../crew-go

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"aaronblondeau.com/hasura-base-go/prisma/db"
+	"github.com/aaronblondau/hasura-base-go/prisma/db"
 	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/labstack/echo/v4"
 )
