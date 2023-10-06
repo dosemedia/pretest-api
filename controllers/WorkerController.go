@@ -141,7 +141,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
 		}
 		// Note, delims are changed to make to templates easier to use with Maizzle
-		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		t, tError := template.New("").Parse(string(rawHtml))
 		if tError != nil {
 			return c.JSON(http.StatusBadRequest, tError.Error())
 		}
@@ -213,7 +213,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
 		}
 		// Note, delims are changed to make to templates easier to use with Maizzle
-		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		t, tError := template.New("").Parse(string(rawHtml))
 		if tError != nil {
 			return c.JSON(http.StatusBadRequest, tError.Error())
 		}
@@ -274,7 +274,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
 		}
 		// Note, delims are changed to make to templates easier to use with Maizzle
-		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		t, tError := template.New("").Parse(string(rawHtml))
 		if tError != nil {
 			return c.JSON(http.StatusBadRequest, tError.Error())
 		}
@@ -323,7 +323,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
 		}
 		// Note, delims are changed to make to templates easier to use with Maizzle
-		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		t, tError := template.New("").Parse(string(rawHtml))
 		if tError != nil {
 			return c.JSON(http.StatusBadRequest, tError.Error())
 		}
@@ -426,7 +426,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 			return c.JSON(http.StatusBadRequest, rawHtmlError.Error())
 		}
 		// Note, delims are changed to make to templates easier to use with Maizzle
-		t, tError := template.New("").Delims("[[", "]]").Parse(string(rawHtml))
+		t, tError := template.New("").Parse(string(rawHtml))
 		if tError != nil {
 			return c.JSON(http.StatusBadRequest, tError.Error())
 		}

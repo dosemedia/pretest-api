@@ -51,8 +51,8 @@
         <tr>
           <td style="width: 552px; max-width: 100%">
             <div class="sm-my-8" style="margin-top: 48px; margin-bottom: 48px; text-align: center">
-              <a href="https://maizzle.com">
-                <img src="images/maizzle.png" width="70" alt="Maizzle" style="max-width: 100%; vertical-align: middle; line-height: 1; border: 0">
+              <a href="https://appname.com">
+                <img src="https://raw.githubusercontent.com/aaronblondeau/hasura-base-go/main/emails/build_production/images/maizzle.png" width="70" alt="Maizzle" style="max-width: 100%; vertical-align: middle; line-height: 1; border: 0">
               </a>
             </div>
             <table style="width: 100%;" cellpadding="0" cellspacing="0" role="none">
@@ -62,13 +62,13 @@
                     New Contact Form Submission
                   </h1>
                   <p style="margin: 0; line-height: 24px">
-                    Name : [[ .Name ]]
+                    Name : {{ .Name }}
                   </p>
                   <p style="margin: 0; line-height: 24px;">
-                    Email : [[ .Email ]]
+                    Email : {{ .Email }}
                   </p>
                   <p style="margin: 0; line-height: 24px;">
-                    Message : [[ .Message ]]
+                    Message : {{ .Message }}
                   </p>
                 </td>
               </tr>

@@ -37,8 +37,12 @@ go run github.com/steebchen/prisma-client-go generate
 
 6. Run hasura migrations and apply metadata
 
-```
+```powershell
 setx HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
+```
+
+```bash
+export HASURA_GRAPHQL_ADMIN_SECRET=mydevsecret
 ```
 
 ```
@@ -48,7 +52,12 @@ hasura metadata apply --project ./hasura
 
 7. Start the hasura console
 
-```
+```powershell
+setx HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
+hasur
+
+```bash
+export HASURA_GRAPHQL_ADMIN_SECRET=mydevsecret
 hasura console --project ./hasura
 ```
 
