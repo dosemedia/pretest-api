@@ -86,8 +86,8 @@ To develop email templates make sure you have Node.js installed and then:
 
 ```
 cd emails
-npm install
-npm run dev
+yarn install
+yarn dev
 ```
 
 Once the dev server has started, go to http://localhost:3050/.  Updates to templates will live reload!
@@ -96,7 +96,7 @@ To build email templates
 
 ```
 cd emails
-npm run build
+yarn build
 ```
 
 Note that email templates are embedded in the go executable so they must be generated before building or running "go run main.go".

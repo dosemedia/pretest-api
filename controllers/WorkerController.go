@@ -158,7 +158,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 
 		// Send the email
 		from := os.Getenv("EMAIL_SENDER")
-		emailSendError := lib.SendEmail(from, user.Email, "Verify your AppName email", htmlBody.String())
+		emailSendError := lib.SendEmail(from, user.Email, "Verify your pretest.com email", htmlBody.String())
 		if emailSendError != nil {
 			return c.JSON(http.StatusBadRequest, emailSendError.Error())
 		}
@@ -230,7 +230,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 
 		// Send the email
 		from := os.Getenv("EMAIL_SENDER")
-		emailSendError := lib.SendEmail(from, user.Email, "AppName password reset request", htmlBody.String())
+		emailSendError := lib.SendEmail(from, user.Email, "pretest.com password reset request", htmlBody.String())
 		if emailSendError != nil {
 			return c.JSON(http.StatusBadRequest, emailSendError.Error())
 		}
@@ -285,7 +285,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 
 		// Send the email
 		from := os.Getenv("EMAIL_SENDER")
-		emailSendError := lib.SendEmail(from, user.Email, "AppName password changed", htmlBody.String())
+		emailSendError := lib.SendEmail(from, user.Email, "pretest.com password changed", htmlBody.String())
 		if emailSendError != nil {
 			return c.JSON(http.StatusBadRequest, emailSendError.Error())
 		}
@@ -334,7 +334,7 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 
 		// Send the email
 		from := os.Getenv("EMAIL_SENDER")
-		emailSendError := lib.SendEmail(from, email, "AppName account destroyed", htmlBody.String())
+		emailSendError := lib.SendEmail(from, email, "pretest.com account destroyed", htmlBody.String())
 		if emailSendError != nil {
 			return c.JSON(http.StatusBadRequest, emailSendError.Error())
 		}
@@ -450,14 +450,14 @@ func (controller *WorkerController) Run(e *echo.Echo) error {
 
 		recipientsEnv := os.Getenv("CONTACT_FORM_RECIPIENT_EMAILS")
 		if recipientsEnv == "" {
-			recipientsEnv = "admin@AppName.com"
+			recipientsEnv = "admin@pretest.com.com"
 		}
 		recipients := strings.Split(recipientsEnv, ",")
 
 		// Send the email(s)
 		for _, recipient := range recipients {
 			from := os.Getenv("EMAIL_SENDER")
-			emailSendError := lib.SendEmail(from, recipient, "AppName Contact Form Submission", htmlBody.String())
+			emailSendError := lib.SendEmail(from, recipient, "pretest.com Contact Form Submission", htmlBody.String())
 			if emailSendError != nil {
 				return c.JSON(http.StatusBadRequest, emailSendError.Error())
 			}
