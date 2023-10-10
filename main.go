@@ -12,8 +12,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/aaronblondau/hasura-base-go/controllers"
 	"github.com/aaronblondeau/crew-go/crew"
+	"github.com/dosemedia/pretest-api/controllers"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

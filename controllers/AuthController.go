@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aaronblondau/hasura-base-go/prisma/db"
+	"github.com/dosemedia/pretest-api/prisma/db"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	goredislib "github.com/redis/go-redis/v9"

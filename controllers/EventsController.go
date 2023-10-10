@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aaronblondau/hasura-base-go/prisma/db"
 	"github.com/aaronblondeau/crew-go/crew"
+	"github.com/dosemedia/pretest-api/prisma/db"
 	"github.com/labstack/echo/v4"
 )
 

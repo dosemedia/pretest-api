@@ -1,4 +1,4 @@
-module github.com/aaronblondau/hasura-base-go
+module github.com/dosemedia/pretest-api
 
 // For local dev with crew-go in sibling folder:
 // replace github.com/aaronblondeau/crew-go => ../crew-go

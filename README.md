@@ -28,14 +28,7 @@ docker compose up -d
 
 4. Use the minio UI (http://localhost:9090/) to create a 'user-public' bucket as well as to create an api access key and secret. Update S3_ACCESS_KEY and S3_SECRET_KEY in .env file.
 
-5. To update prisma schema after hasura db updates:
-
-```
-go run github.com/steebchen/prisma-client-go db pull
-go run github.com/steebchen/prisma-client-go generate
-```
-
-6. Run hasura migrations and apply metadata
+5. Run hasura migrations and apply metadata
 
 ```powershell
 setx HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
@@ -48,6 +41,13 @@ export HASURA_GRAPHQL_ADMIN_SECRET=mydevsecret
 ```
 hasura migrate apply --project ./hasura
 hasura metadata apply --project ./hasura
+```
+
+6. Update prisma:
+
+```
+go run github.com/steebchen/prisma-client-go db pull
+go run github.com/steebchen/prisma-client-go generate
 ```
 
 7. Start the hasura console

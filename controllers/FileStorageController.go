@@ -13,12 +13,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aaronblondau/hasura-base-go/prisma/db"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/disintegration/imaging"
+	"github.com/dosemedia/pretest-api/prisma/db"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
