@@ -31,7 +31,7 @@ docker compose up -d
 5. Run hasura migrations and apply metadata
 
 ```powershell
-setx HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
+set HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
 ```
 
 ```bash
@@ -53,8 +53,9 @@ go run github.com/steebchen/prisma-client-go generate
 7. Start the hasura console
 
 ```powershell
-setx HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
-hasur
+set HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
+hasura console --project ./hasura
+```
 
 ```bash
 export HASURA_GRAPHQL_ADMIN_SECRET=mydevsecret
