@@ -1,11 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   theme: {
-    screens: {
-      sm: {max: '600px'},
-      xs: {max: '425px'},
-    },
     extend: {
+      screens: {
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
+      },
       spacing: {
         screen: '100vw',
         full: '100%',
@@ -75,23 +78,14 @@ module.exports = {
         mono: ['ui-monospace', 'Menlo', 'Consolas', 'monospace'],
       },
       fontSize: {
-        0: '0',
-        xxs: '11px',
-        xs: '12px',
-        '2xs': '13px',
         sm: '14px',
-        '2sm': '15px',
-        base: '16px',
-        lg: '18px',
-        xl: '20px',
-        '2xl': '24px',
-        '3xl': '30px',
-        '4xl': '36px',
-        '5xl': '48px',
-        '6xl': '60px',
-        '7xl': '72px',
-        '8xl': '96px',
-        '9xl': '128px',
+        base: '20px',
+        lg: '30px',
+        xl: '35px',
+        '2xl': '1.063rem',
+        '3xl': '1.953rem',
+        '4xl': '2.441rem',
+        '5xl': '3.052rem',
       },
       letterSpacing: theme => ({
         ...theme('width'),

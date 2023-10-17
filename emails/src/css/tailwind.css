@@ -15,3 +15,55 @@
 
 /* Your custom utility classes */
 @import "utilities";
+
+body {
+  color: #494949;
+  font-family: 'Nunito', sans-serif;
+}
+
+.action-button {
+  border-radius: 50px;
+  border: none;
+  color: white;
+  text-transform: none;
+  padding: 15px 26px;
+  align-items: center;
+  background: linear-gradient(90deg, #AB2160 0%, #EF4136 100%);
+}
+
+.input {
+  border-radius: 10px;
+  opacity: 0.9;
+  background: #FFF; 
+}
+
+.auth-background {
+  background-color: #EBEBE6;
+  padding-bottom: 50px
+}
+
+.card {
+  background-color: #F5F5F3;
+  border-radius: 4px;
+  padding: 33px 40px 33px 40px;
+  box-shadow: 0px 1px 2.4px 0px #FFF inset, 0px 2px 12px 0px rgba(80, 70, 37, 0.08);
+}
+
+.have-a-question-container {
+  padding: 27px 19px;
+  border-radius: 3.994px;
+  background: #E5E5DF;
+}
+
+.have-a-question-link {
+  color: #9B2449;
+  text-decoration-line: underline;
+}
+
+
+/* Mobile View */
+@media (max-width: 640px) {
+  .card {
+    padding: 20px
+  }
+}
