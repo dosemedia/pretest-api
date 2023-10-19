@@ -1,2 +1,5 @@
 - "!include public_contact_form_submissions.yaml"
+- "!include public_invitations.yaml"
+- "!include public_teams.yaml"
+- "!include public_teams_users.yaml"
 - "!include public_users.yaml"

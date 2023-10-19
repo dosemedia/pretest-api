@@ -21,25 +21,93 @@
   <![endif]-->
   <title>Confirm your email address</title>
   <style>
+    @media (min-width: 640px) {
+      .container {
+        max-width: 640px !important;
+      }
+    }
+    @media (min-width: 768px) {
+      .container {
+        max-width: 768px !important;
+      }
+    }
+    @media (min-width: 1024px) {
+      .container {
+        max-width: 1024px !important;
+      }
+    }
+    @media (min-width: 1280px) {
+      .container {
+        max-width: 1280px !important;
+      }
+    }
+    @media (min-width: 1536px) {
+      .container {
+        max-width: 1536px !important;
+      }
+    }
+    .my-12 {
+      margin-top: 48px;
+      margin-bottom: 48px;
+    }
+    .mb-6 {
+      margin-bottom: 24px;
+    }
+    .max-w-full {
+      max-width: 100%;
+    }
+    .rounded {
+      border-radius: 4px;
+    }
+    .bg-white {
+      background-color: #fff;
+    }
+    .p-12 {
+      padding: 48px;
+    }
+    .px-6 {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .font-sans {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .text-2xl {
+      font-size: 1.063rem;
+    }
+    .font-semibold {
+      font-weight: 600;
+    }
+    .leading-8 {
+      line-height: 32px;
+    }
+    .text-black {
+      color: #000;
+    }
+    .text-slate-700 {
+      color: #334155;
+    }
+    .shadow-sm {
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
     body {
       color: #494949;
       font-family: 'Nunito', sans-serif;
     }
-    @media (min-width: 640px) {
-      .sm-my-8 {
-        margin-top: 32px !important;
-        margin-bottom: 32px !important;
+    @media (max-width: 640px) {
+      .card {
+        padding: 20px !important
       }
-      .sm-px-4 {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
+    }
+    @media (min-width: 768px) {
+      .md-w-4-12 {
+        width: 33.333333% !important;
       }
-      .sm-px-6 {
-        padding-left: 24px !important;
-        padding-right: 24px !important;
-      }
-      .sm-leading-8 {
-        line-height: 32px !important;
+      .md-text-lg {
+        font-size: 30px !important;
       }
     }
   </style>
@@ -50,36 +118,32 @@
     &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847;
   </div>
   <div role="article" aria-roledescription="email" aria-label="Confirm your email address" lang="en">
-    <div class="sm-px-4" style="background-color: #f8fafc; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif">
-      <table align="center" cellpadding="0" cellspacing="0" role="none">
-        <tr>
-          <td style="width: 552px; max-width: 100%">
-            <div class="sm-my-8" style="margin-top: 48px; margin-bottom: 48px; text-align: center">
-              <a href="https://pretest.com/">
-                <img src="https://s3.amazonaws.com/pretest.com/orchard.png" width="170" alt="pretest.com" style="max-width: 100%; vertical-align: middle; line-height: 1; border: 0">
-              </a>
+    <div style="background-color: #EBEBE6; padding-bottom: 50px">
+      <div class="container" style="width: 100%; margin-left: auto; margin-right: auto">
+        <div style="display: flex; height: 100vh; flex-direction: column; align-items: center; justify-content: center">
+          <div class="card md-w-4-12" style="width: 66.666667%; background-color: #F5F5F3; padding: 33px 40px; box-shadow: 0px 1px 2.4px 0px #FFF inset, 0px 2px 12px 0px rgba(80, 70, 37, 0.08); border-radius: 5px 5px 0 0">
+            <div class="card-body">
+              <div>
+                <img src="https://s3.amazonaws.com/pretest.com/orchard.png" width="157" alt="pretest.com" style="max-width: 100%; vertical-align: middle; line-height: 1; border: 0">
+              </div>
+              <div>
+                <div class="md-text-lg" style="margin-bottom: 20px; margin-top: 40px; font-size: 20px; font-weight: 700">
+                  New Contact Form Submission
+                </div>
+                <p style="margin: 0; line-height: 24px">
+                  Name : {{ .Name }}
+                </p>
+                <p style="margin: 0; line-height: 24px;">
+                  Email : {{ .Email }}
+                </p>
+                <p style="margin: 0; line-height: 24px;">
+                  Message : {{ .Message }}
+                </p>
+              </div>
             </div>
-            <table style="width: 100%;" cellpadding="0" cellspacing="0" role="none">
-              <tr>
-                <td class="sm-px-6" style="border-radius: 4px; background-color: #fff; padding: 48px; font-size: 20px; color: #334155; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05)">
-                  <h1 class="sm-leading-8" style="margin: 0 0 24px; font-size: 1.063rem; font-weight: 600; color: #000">
-                    New Contact Form Submission
-                  </h1>
-                  <p style="margin: 0; line-height: 24px">
-                    Name : {{ .Name }}
-                  </p>
-                  <p style="margin: 0; line-height: 24px;">
-                    Email : {{ .Email }}
-                  </p>
-                  <p style="margin: 0; line-height: 24px;">
-                    Message : {{ .Message }}
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </body>

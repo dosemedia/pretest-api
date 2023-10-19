@@ -1,0 +1,50 @@
+table:
+  name: teams
+  schema: public
+array_relationships:
+  - name: teams_users
+    using:
+      foreign_key_constraint_on:
+        column: team_id
+        table:
+          name: teams_users
+          schema: public
+insert_permissions:
+  - role: user
+    permission:
+      check: {}
+      columns:
+        - name
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - created_at
+        - id
+        - name
+        - updated_at
+      filter:
+        teams_users:
+          user:
+            id:
+              _eq: X-Hasura-User-Id
+      allow_aggregations: true
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - name
+      filter:
+        teams_users:
+          user:
+            id:
+              _eq: X-Hasura-User-Id
+      check: null
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        teams_users:
+          user:
+            id:
+              _eq: X-Hasura-User-Id
