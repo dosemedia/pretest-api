@@ -121,10 +121,18 @@ func authToken(controller *AuthController, token string, c echo.Context) error {
 	}
 
 	role := "user"
+	roles := []string{role}
+
+	if strings.Contains(user.Email, "@orchard-insights.com") {
+		role = "superuser"
+		roles = append(roles, "superuser")
+	}
 
 	response := map[string]interface{}{
-		"X-Hasura-Role":    role,
-		"X-Hasura-User-Id": userId,
+		"X-Hasura-Role":          role,
+		"X-Hasura-User-Email":    user.Email,
+		"X-Hasura-User-Id":       userId,
+		"X-Hasura-Allowed-Roles": roles,
 	}
 
 	// Cache response
