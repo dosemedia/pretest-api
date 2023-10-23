@@ -1,2 +1,4 @@
-.env
 data
+.env
+dist
+node_modules

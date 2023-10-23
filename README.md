@@ -1,9 +1,6 @@
 # Hasura Base
 
-This is a starter project that uses Go as a companion server for Hasura.
-
-For a node.js based version see : [https://github.com/aaronblondeau/hasura-base](https://github.com/aaronblondeau/hasura-base)
-
+This is a starter project that uses Hasura, Prisma, Minio, BullMQ, and Maizzle.
 Authentication is handled by Hasura and JWTs.
 
 ## Getting Started
@@ -11,10 +8,8 @@ Authentication is handled by Hasura and JWTs.
 1.  Install dependencies
 
 ```
-go get
+yarn
 ```
-
-Also install the hasura cli : https://hasura.io/docs/latest/hasura-cli/install-hasura-cli/
 
 2. Copy .env.example to .env and update values (note "TODO" values).  The S3 secret and key will be updated in step 4 below.
 
@@ -23,69 +18,58 @@ Also install the hasura cli : https://hasura.io/docs/latest/hasura-cli/install-h
 Before starting the containers, switch the postgres image to something like "postgis/postgis:15-3.3" in docker-compose.yml if you need PostGIS support.
 
 ```
-docker compose up -d
+yarn dev:docker:start
 ```
 
 4. Use the minio UI (http://localhost:9090/) to create a 'user-public' bucket as well as to create an api access key and secret. Update S3_ACCESS_KEY and S3_SECRET_KEY in .env file.
 
-5. Run hasura migrations and apply metadata
-
-```powershell
-set HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
-```
-
-```bash
-export HASURA_GRAPHQL_ADMIN_SECRET=mydevsecret
-```
+5. Start the node.js server
 
 ```
-hasura migrate apply --project ./hasura
-hasura metadata apply --project ./hasura
+yarn dev
 ```
 
-6. Update prisma:
+6. Run hasura migrations and apply metadata
 
 ```
-go run github.com/steebchen/prisma-client-go db pull
-go run github.com/steebchen/prisma-client-go generate
+yarn dev:migrate
+yarn dev:metadata
 ```
 
 7. Start the hasura console
 
-```powershell
-setx HASURA_GRAPHQL_ADMIN_SECRET "mydevsecret"
-hasura console --project ./hasura
-
-```bash
-export HASURA_GRAPHQL_ADMIN_SECRET=mydevsecret
-hasura console --project ./hasura
+```
+yarn dev:console
 ```
 
-8. Start the golang server
-
-```
-go run main.go
-```
-
-9. Use the hasura console to create additonal tables, actions, events, relationships, and permissions.
+8. Use the hasura console to create additonal tables, actions, events, relationships, and permissions.
 
 Other admin tools are available at (see .env file for passwords):
+
 Minio UI : http://localhost:9090/
+BullMQ UI : http://localhost:3000/admin/queues
+
+9. To update prisma schema after hasura db updates:
+
+```
+yarn prisma db pull
+yarn prisma generate
+```
 
 10. When done, stop the docker containers
 
 ```
-docker compose down
+yarn dev:docker:stop
 ```
 
 ## Email Templates
 
 Emails templates are managed with [maizzle](https://maizzle.com/).
 
-To develop email templates make sure you have Node.js installed and then:
+To develop email templates:
 
 ```
-cd emails
+cd src/emails
 yarn install
 yarn dev
 ```
@@ -95,17 +79,15 @@ Once the dev server has started, go to http://localhost:3050/.  Updates to templ
 To build email templates
 
 ```
-cd emails
+cd src/emails
 yarn build
 ```
 
-Note that email templates are embedded in the go executable so they must be generated before building or running "go run main.go".
-
 ## Troubleshooting
 
-https://goprisma.org/docs/getting-started/quickstart
+Prisma model types not updating?
+Open databse.ts and remove import
+import { PrismaClient } from '@prisma/client'
+save, then restore import and save again
 
-## TODO
-
-How to set go prisma db conn string from env var?
-Update env vars (crew specific ones added, search for os.Getenv)
+RequestTimeTooSkewed: The difference between the request time and the server's time is too large. => Stop containers, stop docker desktop, then restart all
