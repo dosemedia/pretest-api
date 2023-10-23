@@ -11,6 +11,13 @@ actions:
       handler: '{{ACTIONS_BASE_URL}}/changePassword'
     permissions:
       - role: user
+  - name: createProject
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/createProject'
+    permissions:
+      - role: user
+    comment: Create a new project.
   - name: destroyUser
     definition:
       kind: synchronous
@@ -61,4 +68,5 @@ custom_types:
   objects:
     - name: RegisterOutput
     - name: LoginOutput
+    - name: ProjectOutput
   scalars: []

@@ -33,4 +33,55 @@ model users {
   display_name             String?
   avatar_file_key          String?
   contact_form_submissions contact_form_submissions[]
+  teams_users              teams_users[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model invitations {
+  team_id    String   @db.Uuid
+  email      String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  teams      teams    @relation(fields: [team_id], references: [id], onDelete: Cascade)
+
+  @@id([team_id, email])
+}
+
+model projects {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
+  teams_projects teams_projects[]
+}
+
+model teams {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
+  invitations    invitations[]
+  teams_projects teams_projects[]
+  teams_users    teams_users[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model teams_projects {
+  project_id String   @db.Uuid
+  team_id    String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  projects   projects @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  teams      teams    @relation(fields: [team_id], references: [id], onDelete: Cascade)
+
+  @@id([project_id, team_id])
+}
+
+model teams_users {
+  team_id    String   @db.Uuid
+  user_id    String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  teams      teams    @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([team_id, user_id])
 }

@@ -1,0 +1,58 @@
+table:
+  name: projects
+  schema: public
+array_relationships:
+  - name: teams_projects
+    using:
+      foreign_key_constraint_on:
+        column: project_id
+        table:
+          name: teams_projects
+          schema: public
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        teams_projects:
+          team:
+            teams_users:
+              user_id:
+                _eq: X-Hasura-User-Id
+      columns:
+        - name
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - created_at
+        - id
+        - name
+        - updated_at
+      filter:
+        teams_projects:
+          team:
+            teams_users:
+              user_id:
+                _eq: X-Hasura-User-Id
+      allow_aggregations: true
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - name
+      filter:
+        teams_projects:
+          team:
+            teams_users:
+              user_id:
+                _eq: X-Hasura-User-Id
+      check: null
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        teams_projects:
+          team:
+            teams_users:
+              user_id:
+                _eq: X-Hasura-User-Id

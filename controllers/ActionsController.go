@@ -13,6 +13,7 @@ import (
 	"github.com/aaronblondeau/crew-go/crew"
 	"github.com/dosemedia/pretest-api/prisma/db"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	goredislib "github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
@@ -34,6 +35,15 @@ type LoginBodyInput struct {
 
 type LoginBody struct {
 	Input LoginBodyInput `json:"input"`
+}
+
+type ProjectBodyOutput struct {
+	Name   string `json:"name"`
+	TeamId string `json:"team_id"`
+}
+
+type ProjectBody struct {
+	Input ProjectBodyOutput `json:"input"`
 }
 
 type VerifyEmailBody struct {
@@ -397,6 +407,64 @@ func (controller *ActionsController) Run(e *echo.Echo) error {
 		}
 
 		return c.JSON(http.StatusOK, true)
+	})
+
+	e.POST("/hasura/actions/createProject", func(c echo.Context) error {
+		body := ProjectBody{}
+		bodyErr := json.NewDecoder(c.Request().Body).Decode(&body)
+		if bodyErr != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": "name and team_id are all required.",
+			})
+		}
+
+		name := body.Input.Name
+		teamId := body.Input.TeamId
+
+		team, teamErr := controller.client.Teams.FindUnique(db.Teams.ID.Equals(teamId)).Exec(c.Request().Context())
+		if teamErr != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": teamErr.Error(),
+			})
+		}
+
+		projectID := uuid.New() // Manually create projectID due to issue with transactions
+
+		project := controller.client.Projects.CreateOne(db.Projects.Name.Set(name), db.Projects.ID.Set(projectID.String())).Tx()
+		teamProject := controller.client.TeamsProjects.CreateOne(db.TeamsProjects.ProjectID.Set(projectID.String()), db.TeamsProjects.TeamID.Set(team.ID)).Tx()
+		err := controller.client.Prisma.Transaction(project, teamProject).Exec(c.Request().Context())
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"message": err.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"name":    project.Result().Name,
+			"team_id": teamProject.Result().TeamID,
+		})
+		// bodyErr := json.NewDecoder(c.Request().Body).Decode(&body)
+		// if bodyErr != nil {
+		// 	return c.JSON(http.StatusBadRequest, map[string]interface{}{
+		// 		"message": "email, newPassword, and code are all required.",
+		// 	})
+		// }
+
+		// user, userError := controller.client.Users.FindFirst(db.Users.Email.Equals(body.Input.Email), db.Users.PasswordResetCode.Equals(body.Input.Code)).Exec(c.Request().Context())
+		// if userError != nil {
+		// 	return c.JSON(http.StatusBadRequest, map[string]interface{}{
+		// 		"message": userError.Error(),
+		// 	})
+		// }
+
+		// changePassError := changePassword(c, controller, user, body.Input.NewPassword)
+		// if changePassError != nil {
+		// 	return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+		// 		"message": changePassError.Error(),
+		// 	})
+		// }
+
+		// return c.JSON(http.StatusOK, true)
 	})
 
 	e.POST("/hasura/actions/resetPassword", func(c echo.Context) error {

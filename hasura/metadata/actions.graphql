@@ -13,6 +13,13 @@ type Mutation {
 }
 
 type Mutation {
+  createProject(
+    name: String!
+    team_id: uuid!
+  ): ProjectOutput
+}
+
+type Mutation {
   destroyUser(
     password: String!
   ): Boolean
@@ -64,5 +71,10 @@ type RegisterOutput {
 type LoginOutput {
   token: String!
   id: String!
+}
+
+type ProjectOutput {
+  name: String!
+  team_id: uuid!
 }
 
