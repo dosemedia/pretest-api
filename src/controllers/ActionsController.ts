@@ -10,6 +10,7 @@ import bcrypt from 'bcryptjs'
 import prisma from '../database'
 import { generateTokenForUser } from '../auth'
 import cache from '../cache'
+import { v4 as uuidv4 } from 'uuid';
 
 class ActionsController implements Controller {
 
@@ -389,8 +390,25 @@ class ActionsController implements Controller {
         if (!user) {
           throw new Error('User not found!')
         }
+        const team_id = req.body.input.team_id
+        const name = req.body.input.name
+        const team = await prisma.teams.findUnique({ where: {
+          id: team_id
+        }})
+        if (!team) {
+          throw new Error('Team not found!')
+        }
+        
+        const uuid = uuidv4()
+        const [project, team_project] = await prisma.$transaction([
+          prisma.projects.create({ data: { name: name, id: uuid }}),
+          prisma.teams_projects.create({ data: { project_id: uuid, team_id: team.id }})
+        ])
 
-        // BRADY TODO
+        res.json({
+          name: project.name,
+          team_id: team_project.team_id
+        })
       }, res)
     })
 
