@@ -393,6 +393,80 @@ class ActionsController implements Controller {
         // BRADY TODO
       }, res)
     })
+
+    app.post('/hasura/actions/joinTeam', async (req: Request, res: Response) => {
+      await this.wrapErrorHandler(async () => {
+        const user = await this.getUserForRequest(req)
+        if (!user) {
+          throw new Error('User not found!')
+        }
+
+        const teamId = req.body.input.teamId
+
+        // Find invitation
+        const invitation = await prisma.invitations.findFirst({
+          where: {
+            team_id: teamId,
+            email: user.email,
+          },
+        })
+        if (!invitation) {
+          return res.status(400).send({ message: 'Invitation not found.' })
+        }
+
+        // Double check that the team still exists
+        const team = await prisma.teams.findUnique({
+          where: {
+            id: teamId,
+          },
+        })
+        if (!team) {
+          return res.status(400).send({ message: 'Team not found.' })
+        }
+
+        // User exists, team exists, and invitation exsists => create membership (and delete invitation)
+        await prisma.$transaction([
+          prisma.teams_users.create({
+            data: {
+              user_id: user.id,
+              team_id: teamId
+            },
+          }),
+          prisma.invitations.deleteMany({
+            where: {
+              team_id: teamId,
+              email: user.email,
+            },
+          })
+        ])
+
+        res.json(true)
+      }, res)
+    })
+
+    app.post('/hasura/actions/leaveTeam', async (req: Request, res: Response) => {
+      await this.wrapErrorHandler(async () => {
+        const user = await this.getUserForRequest(req)
+        if (!user) {
+          throw new Error('User not found!')
+        }
+
+        const teamId = req.body.input.teamId
+
+        // TODO - (in a transaction) peform any cleanup needed when user leaves a team
+
+        console.log('~~ delete teams_users', user.id, teamId)
+
+        await prisma.teams_users.deleteMany({
+          where: {
+            user_id: user.id,
+            team_id: teamId
+          },
+        })
+
+        res.json(true)
+      }, res)
+    })
   }
 
   async shutdown () {

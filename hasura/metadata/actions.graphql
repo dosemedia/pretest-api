@@ -26,6 +26,18 @@ type Mutation {
 }
 
 type Mutation {
+  joinTeam(
+    teamId: uuid!
+  ): Boolean
+}
+
+type Mutation {
+  leaveTeam(
+    teamId: uuid!
+  ): Boolean
+}
+
+type Mutation {
   login(
     email: String!
     password: String!
