@@ -72,11 +72,19 @@ model teams_projects {
 }
 
 model teams_users {
-  team_id    String   @db.Uuid
-  user_id    String   @db.Uuid
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  teams      teams    @relation(fields: [team_id], references: [id], onDelete: Cascade)
-  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  team_id     String      @db.Uuid
+  user_id     String      @db.Uuid
+  created_at  DateTime    @default(now()) @db.Timestamptz(6)
+  role        String      @default("member")
+  teams_roles teams_roles @relation(fields: [role], references: [role], onDelete: NoAction, onUpdate: NoAction)
+  teams       teams       @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  users       users       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([team_id, user_id])
+}
+
+model teams_roles {
+  role        String        @id
+  description String
+  teams_users teams_users[]
 }

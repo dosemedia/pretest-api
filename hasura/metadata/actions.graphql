@@ -20,6 +20,12 @@ type Mutation {
 }
 
 type Mutation {
+  createTeam(
+    name: String!
+  ): Boolean
+}
+
+type Mutation {
   destroyUser(
     password: String!
   ): Boolean

@@ -412,6 +412,28 @@ class ActionsController implements Controller {
       }, res)
     })
 
+    app.post('/hasura/actions/createTeam', async (req: Request, res: Response) => {
+      await this.wrapErrorHandler(async () => {
+        const user = await this.getUserForRequest(req)
+        if (!user) {
+          throw new Error('User not found!')
+        }
+        
+        const name = req.body.input.name
+        if (!name) {
+          throw new Error('Name is required!')
+        }
+
+        const team_id = uuidv4()
+
+        await prisma.$transaction([
+          prisma.teams.create({ data: { name, id: team_id }}),
+          prisma.teams_users.create({ data: { user_id: user.id, team_id, role: 'admin' } })
+        ])
+        res.json(true)
+      }, res)
+    })
+
     app.post('/hasura/actions/joinTeam', async (req: Request, res: Response) => {
       await this.wrapErrorHandler(async () => {
         const user = await this.getUserForRequest(req)

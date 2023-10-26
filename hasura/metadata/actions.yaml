@@ -18,6 +18,12 @@ actions:
     permissions:
       - role: user
     comment: Create a new project.
+  - name: createTeam
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/createTeam'
+    permissions:
+      - role: user
   - name: destroyUser
     definition:
       kind: synchronous
