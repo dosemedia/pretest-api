@@ -54,22 +54,22 @@
               <tr>
                 <td class="sm-px-6" style="border-radius: 4px; background-color: #fff; padding: 48px; font-size: 16px; color: #334155; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05)">
                   <h1 class="sm-leading-8" style="margin: 0 0 24px; font-size: 24px; font-weight: 600; color: #000">
-                    Password Reset Request
+                    Team Invitation
                   </h1>
                   <p style="margin: 0; line-height: 24px">
-                    We've received a request to reset your {{ appName }} password.
+                    You've been invited to join team {{ teamName }} on {{ appName }}.
                     <br>
                     <br>
-                    Please continue to the password reset form by clicking the button below:
+                    Use the button below to accept this invitation:
                   </p>
                   <div role="separator" style="line-height: 24px">&zwj;</div>
                   <div>
-                    <a href="{{ resetPasswordUrl }}" style="display: inline-block; border-radius: 4px; background-color: #b91c1c; padding: 16px 24px; font-size: 16px; font-weight: 600; line-height: 1; color: #f8fafc; text-decoration: none">
+                    <a href="{{ acceptInvitationUrl }}" style="display: inline-block; border-radius: 4px; background-color: #b91c1c; padding: 16px 24px; font-size: 16px; font-weight: 600; line-height: 1; color: #f8fafc; text-decoration: none">
                       <!--[if mso]>
       <i style="mso-font-width: -100%; letter-spacing: 32px; mso-text-raise: 30px" hidden>&nbsp;</i>
     <![endif]-->
                       <span style="mso-text-raise: 16px">
-                  Continue to password reset form &rarr;
+                  Accept Invitation &rarr;
                 </span>
                       <!--[if mso]>
       <i style="mso-font-width: -100%; letter-spacing: 32px;" hidden>&nbsp;</i>
@@ -78,7 +78,7 @@
                   </div>
                   <div role="separator" style="background-color: #e2e8f0; height: 1px; line-height: 1px; margin: 32px 0">&zwj;</div>
                   <p style="margin: 0;">
-                    If you didn't request a password reset for {{ appName }}, you can safely ignore this email.
+                    If you don't want to accept this invitation, you can safely ignore this email.
                     <br>
                     <br>
                     Thanks, <br>The {{ appName }} Team

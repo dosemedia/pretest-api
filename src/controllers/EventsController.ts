@@ -1,4 +1,5 @@
 import notifyContactFormSubmission, { NotifyContactFormSubmissionJobData } from '../queues/notifyContactFormSubmission'
+import sendInvitationEmail, { SendInvitationEmailJobData } from '../queues/sendInvitationEmail'
 import { Express, Request, Response } from 'express'
 import Controller from './Controller'
 
@@ -23,6 +24,18 @@ class EventsController implements Controller {
         if (req.body.trigger.name === 'insert_contact_form_submission') {
           const submissionId = req.body.event.data.new.id
           await notifyContactFormSubmission.add('notify contact form submission ' + submissionId, { submissionId } as NotifyContactFormSubmissionJobData, {
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 10000
+            }
+          })
+        }
+
+        if (req.body.trigger.name === 'insert_invitation') {
+          const teamId = req.body.event.data.new.team_id
+          const email = req.body.event.data.new.email
+          await sendInvitationEmail.add('send invitation email ' + email + ', ' + teamId, { teamId, email } as SendInvitationEmailJobData, {
             attempts: 3,
             backoff: {
               type: 'exponential',
