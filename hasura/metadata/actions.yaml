@@ -24,6 +24,19 @@ actions:
       handler: '{{ACTIONS_BASE_URL}}/destroyUser'
     permissions:
       - role: user
+  - name: joinTeam
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/joinTeam'
+    permissions:
+      - role: user
+    comment: Note that an invitation must exist with the user's email before they can join the team.
+  - name: leaveTeam
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/leaveTeam'
+    permissions:
+      - role: user
   - name: login
     definition:
       kind: synchronous
