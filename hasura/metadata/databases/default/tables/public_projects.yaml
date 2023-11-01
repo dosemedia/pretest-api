@@ -24,9 +24,15 @@ select_permissions:
   - role: user
     permission:
       columns:
+        - branding
         - created_at
         - id
+        - is_draft
         - name
+        - objective
+        - platform
+        - start_time
+        - stop_time
         - updated_at
       filter:
         teams_projects:
@@ -39,7 +45,13 @@ update_permissions:
   - role: user
     permission:
       columns:
+        - branding
+        - is_draft
         - name
+        - objective
+        - platform
+        - start_time
+        - stop_time
       filter:
         teams_projects:
           team:

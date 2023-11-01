@@ -406,6 +406,7 @@ class ActionsController implements Controller {
         ])
 
         res.json({
+          id: project.id,
           name: project.name,
           team_id: team_project.team_id
         })

@@ -92,6 +92,7 @@ type LoginOutput {
 }
 
 type ProjectOutput {
+  id: uuid!
   name: String!
   team_id: uuid!
 }
