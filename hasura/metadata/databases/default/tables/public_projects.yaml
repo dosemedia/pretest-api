@@ -33,6 +33,7 @@ select_permissions:
         - platform
         - start_time
         - stop_time
+        - project_type
         - updated_at
       filter:
         teams_projects:
@@ -52,6 +53,7 @@ update_permissions:
         - platform
         - start_time
         - stop_time
+        - project_type
       filter:
         teams_projects:
           team:

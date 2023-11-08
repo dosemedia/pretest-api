@@ -32,6 +32,12 @@ type Mutation {
 }
 
 type Mutation {
+  facebookAPIGet(
+    url: String!
+  ): json
+}
+
+type Mutation {
   joinTeam(
     teamId: uuid!
   ): Boolean

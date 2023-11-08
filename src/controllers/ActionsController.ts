@@ -1,4 +1,4 @@
-import { Express, Request, Response } from 'express'
+import e, { Express, Request, Response } from 'express'
 import Controller from './Controller'
 import _ from 'lodash'
 import sendVerificationEmail, { SendVerificationEmailJobData } from '../queues/sendVerificationEmail'
@@ -11,6 +11,7 @@ import prisma from '../database'
 import { generateTokenForUser } from '../auth'
 import cache from '../cache'
 import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios'
 
 class ActionsController implements Controller {
 
@@ -506,6 +507,18 @@ class ActionsController implements Controller {
         })
 
         res.json(true)
+      }, res)
+    })
+
+    app.post('/hasura/actions/facebookAPIGet', async (req: Request, res: Response) => {
+      await this.wrapErrorHandler(async () => {
+        const user = await this.getUserForRequest(req)
+        if (!user) {
+          throw new Error('User not found!')
+        }
+        const urlParams = req.body.input.url
+        const response = await axios.get(`https://graph.facebook.com/v${process.env.FACEBOOK_VERSION}${urlParams}&access_token=${process.env.FACEBOOK_ACCESS_TOKEN}`)
+        res.json(response?.data)
       }, res)
     })
   }

@@ -30,6 +30,12 @@ actions:
       handler: '{{ACTIONS_BASE_URL}}/destroyUser'
     permissions:
       - role: user
+  - name: facebookAPIGet
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/facebookAPIGet'
+    permissions:
+      - role: user
   - name: joinTeam
     definition:
       kind: synchronous

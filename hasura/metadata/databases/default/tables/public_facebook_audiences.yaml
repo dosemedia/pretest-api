@@ -1,3 +1,65 @@
 table:
   name: facebook_audiences
   schema: public
+object_relationships:
+  - name: projects_facebook_audiences
+    using:
+      foreign_key_constraint_on: project_id
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        projects_facebook_audiences:
+          teams_projects:
+            team:
+              teams_users:
+                user_id:
+                  _eq: X-Hasura-User-Id
+      columns:
+        - geo_locations
+        - name
+        - project_id
+    comment: ""
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - device_platforms
+        - facebook_positions
+        - genders
+        - geo_locations
+        - id
+        - interests
+        - max_age
+        - min_age
+        - name
+        - project_id
+        - publisher_platforms
+        - updated_at
+      filter:
+        projects_facebook_audiences:
+          teams_projects:
+            team:
+              teams_users:
+                user_id:
+                  _eq: X-Hasura-User-Id
+    comment: ""
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - device_platforms
+        - facebook_positions
+        - genders
+        - geo_locations
+        - max_age
+        - min_age
+      filter:
+        projects_facebook_audiences:
+          teams_projects:
+            team:
+              teams_users:
+                user_id:
+                  _eq: X-Hasura-User-Id
+      check: null
+    comment: ""
