@@ -19,6 +19,7 @@ insert_permissions:
         - geo_locations
         - name
         - project_id
+        - publisher_platforms
     comment: ""
 select_permissions:
   - role: user
