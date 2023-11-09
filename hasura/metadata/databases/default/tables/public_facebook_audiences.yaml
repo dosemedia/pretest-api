@@ -52,6 +52,7 @@ update_permissions:
         - facebook_positions
         - genders
         - geo_locations
+        - interests
         - max_age
         - min_age
       filter:
