@@ -1,0 +1,67 @@
+table:
+  name: themes_angles
+  schema: public
+object_relationships:
+  - name: theme
+    using:
+      foreign_key_constraint_on: theme_id
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        theme:
+          project:
+            teams_projects:
+              team:
+                teams_users:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+      columns:
+        - name
+        - theme_id
+    comment: ""
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - created_at
+        - id
+        - name
+        - theme_id
+        - updated_at
+      filter:
+        theme:
+          project:
+            teams_projects:
+              team:
+                teams_users:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+    comment: ""
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - name
+      filter:
+        theme:
+          project:
+            teams_projects:
+              team:
+                teams_users:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+      check: null
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        theme:
+          project:
+            teams_projects:
+              team:
+                teams_users:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+    comment: ""
