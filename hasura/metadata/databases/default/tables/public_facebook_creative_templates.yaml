@@ -1,0 +1,28 @@
+table:
+  name: facebook_creative_templates
+  schema: public
+array_relationships:
+  - name: facebook_creatives
+    using:
+      foreign_key_constraint_on:
+        column: template_id
+        table:
+          name: facebook_creatives
+          schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - created_at
+        - creatomate_template_id
+        - description
+        - id
+        - json_schema
+        - name
+        - ui_schema
+        - updated_at
+      filter:
+        enabled:
+          _eq: true
+      allow_aggregations: true
+    comment: ""

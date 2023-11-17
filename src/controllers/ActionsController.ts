@@ -12,6 +12,7 @@ import { generateTokenForUser } from '../auth'
 import cache from '../cache'
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios'
+import Handlebars from 'handlebars'
 
 class ActionsController implements Controller {
 
@@ -517,7 +518,8 @@ class ActionsController implements Controller {
           throw new Error('User not found!')
         }
         const urlParams = req.body.input.url
-        const response = await axios.get(`https://graph.facebook.com/v${process.env.FACEBOOK_VERSION}${urlParams}&access_token=${process.env.FACEBOOK_ACCESS_TOKEN}`)
+        var template = Handlebars.compile(urlParams)
+        const response = await axios.get(`https://graph.facebook.com/v${process.env.FACEBOOK_VERSION}${template(process.env)}&access_token=${process.env.FACEBOOK_ACCESS_TOKEN}`)
         res.json(response?.data)
       }, res)
     })

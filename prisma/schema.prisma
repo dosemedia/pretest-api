@@ -44,11 +44,20 @@ model invitations {
 }
 
 model projects {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name           String
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
-  teams_projects teams_projects[]
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  start_time         DateTime?            @db.Timestamptz(6)
+  stop_time          DateTime?            @db.Timestamptz(6)
+  objective          String?
+  branding           String?
+  is_draft           Boolean              @default(true)
+  platform           String?
+  project_type       String?
+  facebook_audiences facebook_audiences[]
+  projects_themes    projects_themes[]
+  teams_projects     teams_projects[]
 }
 
 model teams {
@@ -87,4 +96,40 @@ model teams_roles {
   role        String        @id
   description String
   teams_users teams_users[]
+}
+
+model facebook_audiences {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id          String   @db.Uuid
+  name                String?
+  min_age             Decimal? @db.Decimal
+  max_age             Decimal? @db.Decimal
+  genders             Int[]    @default([1, 2])
+  device_platforms    String[] @default(["mobile", "desktop"])
+  facebook_positions  String[] @default(["feed"])
+  geo_locations       Json     @default("{\"countries\": [\"US\"]}")
+  publisher_platforms String[] @default(["facebook"])
+  interests           Json?
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @default(now()) @db.Timestamptz(6)
+  projects            projects @relation(fields: [project_id], references: [id], onDelete: Cascade)
+}
+
+model projects_themes {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id    String          @db.Uuid
+  name          String
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  projects      projects        @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  themes_angles themes_angles[]
+}
+
+model themes_angles {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  theme_id        String          @db.Uuid
+  name            String
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
+  projects_themes projects_themes @relation(fields: [theme_id], references: [id], onDelete: Cascade)
 }
