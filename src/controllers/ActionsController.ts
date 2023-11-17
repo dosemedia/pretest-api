@@ -429,6 +429,8 @@ class ActionsController implements Controller {
 
         const team_id = uuidv4()
 
+        console.log('~~ create team', { user_id: user.id, team_id, role: 'admin' })
+
         await prisma.$transaction([
           prisma.teams.create({ data: { name, id: team_id }}),
           prisma.teams_users.create({ data: { user_id: user.id, team_id, role: 'admin' } })
