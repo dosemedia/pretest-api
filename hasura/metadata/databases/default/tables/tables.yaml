@@ -3,6 +3,7 @@
 - "!include public_facebook_creative_templates.yaml"
 - "!include public_facebook_creatives.yaml"
 - "!include public_invitations.yaml"
+- "!include public_project_facebook_creative_templates.yaml"
 - "!include public_projects.yaml"
 - "!include public_projects_themes.yaml"
 - "!include public_teams.yaml"
