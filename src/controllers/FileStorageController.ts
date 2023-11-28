@@ -48,6 +48,49 @@ class FileStorageController implements Controller {
 
   startup (app: Express) {
 
+    const uploadCreativeAssetPublic = multer({
+      storage: multerS3({
+        s3: s3ClientUserPublic as any,
+        bucket: process.env.S3_CREATIVE_ASSET_PUBLIC_BUCKET || 'creative-assets-public',
+        metadata: (req, file, cb) => {
+          cb(null, {originalname: file.originalname})
+        },
+        contentType: (req, file, cb) => {
+          cb(null, file.mimetype)
+        },
+        key: async (req: Request, file, cb) => {
+          try {
+            const uuid = uuidv4()
+            const user = await this.getUserForRequest(req)
+            const name = req.body.name
+            const id = req.body.id
+            const creativeId = `${id}`
+            const extension = file.originalname.split('.').pop()
+            let fileKey = `${creativeId}/${uuid}`;
+            if (extension) {
+              fileKey += `.${extension}`
+            }
+
+            (req as any).saved_files = [{
+              bucket: process.env.S3_CREATIVE_ASSET_PUBLIC_BUCKET|| 'creative-assets-public',
+              originalname: file.originalname,
+              mimetype: file.mimetype,
+              key: fileKey,
+              size: file.size,
+              endpoint: process.env.S3_ENDPOINT || 'http://localhost:9000',
+              region: process.env.S3_REGION || 'us-east-1',
+              userId: user.id
+            }]
+
+            cb(null, fileKey)
+          } catch (err) {
+            console.error(err)
+            cb(err)
+          }
+        }
+      })
+    })
+
     const uploadUserAvatarsPublic = multer({
       storage: multerS3({
         s3: s3ClientUserPublic as any,
@@ -87,6 +130,36 @@ class FileStorageController implements Controller {
         }
       })
     })
+
+    app.post('/files/creative-assets', uploadCreativeAssetPublic.single('creative-assets'), async (req: Request, res: Response) => {
+      // Note, jwt is checked by multer middleware
+      const file = (req as any).saved_files[0]
+      res.json(file)
+    })
+
+    app.get('/files/creative-assets/:creativeId/:fileId', async (req: Request, res: Response) => {
+      const creativeId = req.params.creativeId
+      const fileId = req.params.fileId
+      const fileKey = `${creativeId}/${fileId}`
+      const params = {
+        Bucket: process.env.S3_CREATIVE_ASSETS_BUCKET || 'creative-assets-public',
+        Key: fileKey,
+      }
+      try {
+        const result = await s3ClientUserPublic.send(new GetObjectCommand(params))
+        if (result.Body) {
+          res.status(200);
+          res.type('image/png');
+          (result.Body as Readable)
+            .pipe(res);
+        } else {
+          res.status(404).send('File not found')
+        }
+      } catch (err) {
+        console.error(err)
+        res.status(404).send('File not found')
+      }
+    }),
 
     // Route to store avatars - requires Auth token (Bearer)
     app.post('/files/user-avatar', uploadUserAvatarsPublic.single('avatar'), async (req: Request, res: Response) => {
