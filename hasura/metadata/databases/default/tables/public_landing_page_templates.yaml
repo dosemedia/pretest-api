@@ -9,20 +9,3 @@ array_relationships:
         table:
           name: landing_pages
           schema: public
-select_permissions:
-  - role: user
-    permission:
-      columns:
-        - component
-        - created_at
-        - description
-        - id
-        - json_schema
-        - name
-        - ui_schema
-        - updated_at
-      filter:
-        enabled:
-          _eq: true
-      allow_aggregations: true
-    comment: ""

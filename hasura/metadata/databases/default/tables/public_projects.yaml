@@ -2,19 +2,33 @@ table:
   name: projects
   schema: public
 array_relationships:
-  - name: audiences
-    using:
-      foreign_key_constraint_on:
-        column: project_id
-        table:
-          name: facebook_audiences
-          schema: public
   - name: creatives
     using:
       foreign_key_constraint_on:
         column: project_id
         table:
           name: facebook_creatives
+          schema: public
+  - name: facebook_audiences
+    using:
+      foreign_key_constraint_on:
+        column: project_id
+        table:
+          name: facebook_audiences
+          schema: public
+  - name: landing_pages
+    using:
+      foreign_key_constraint_on:
+        column: project_id
+        table:
+          name: landing_pages
+          schema: public
+  - name: project_facebook_creative_templates
+    using:
+      foreign_key_constraint_on:
+        column: project_id
+        table:
+          name: project_facebook_creative_templates
           schema: public
   - name: teams_projects
     using:

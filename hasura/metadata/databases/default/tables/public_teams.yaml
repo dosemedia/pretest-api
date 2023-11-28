@@ -9,6 +9,13 @@ array_relationships:
         table:
           name: invitations
           schema: public
+  - name: teams_projects
+    using:
+      foreign_key_constraint_on:
+        column: team_id
+        table:
+          name: teams_projects
+          schema: public
   - name: teams_users
     using:
       foreign_key_constraint_on:
