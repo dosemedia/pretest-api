@@ -57,6 +57,7 @@ model projects {
   project_type       String?
   facebook_audiences facebook_audiences[]
   facebook_creatives facebook_creatives[]
+  landing_pages      landing_pages[]
   projects_themes    projects_themes[]
   teams_projects     teams_projects[]
 }
@@ -157,4 +158,28 @@ model facebook_creatives {
   updated_at                  DateTime                    @default(now()) @db.Timestamptz(6)
   projects                    projects                    @relation(fields: [project_id], references: [id], onDelete: Cascade)
   facebook_creative_templates facebook_creative_templates @relation(fields: [template_id], references: [id])
+}
+
+model landing_page_templates {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enabled       Boolean         @default(true)
+  name          String
+  description   String?
+  json_schema   Json
+  ui_schema     Json?
+  component     String
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  landing_pages landing_pages[]
+}
+
+model landing_pages {
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id             String                 @db.Uuid
+  template_id            String                 @db.Uuid
+  data                   Json
+  created_at             DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime               @default(now()) @db.Timestamptz(6)
+  projects               projects               @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  landing_page_templates landing_page_templates @relation(fields: [template_id], references: [id])
 }
