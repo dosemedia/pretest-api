@@ -8,3 +8,61 @@ object_relationships:
   - name: project
     using:
       foreign_key_constraint_on: project_id
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        project:
+          teams_projects:
+            team:
+              teams_users:
+                user_id:
+                  _eq: X-Hasura-User-Id
+      columns:
+        - data
+        - project_id
+        - template_id
+    comment: ""
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - data
+        - created_at
+        - updated_at
+        - id
+        - project_id
+        - template_id
+      filter:
+        project:
+          teams_projects:
+            team:
+              teams_users:
+                user_id:
+                  _eq: X-Hasura-User-Id
+    comment: ""
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - data
+      filter:
+        project:
+          teams_projects:
+            team:
+              teams_users:
+                user_id:
+                  _eq: X-Hasura-User-Id
+      check: null
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        project:
+          teams_projects:
+            team:
+              teams_users:
+                user_id:
+                  _eq: X-Hasura-User-Id
+    comment: ""
