@@ -2,9 +2,6 @@ table:
   name: facebook_creatives
   schema: public
 object_relationships:
-  - name: facebook_creative_template
-    using:
-      foreign_key_constraint_on: template_id
   - name: project
     using:
       foreign_key_constraint_on: project_id

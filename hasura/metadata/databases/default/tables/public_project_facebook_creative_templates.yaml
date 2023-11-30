@@ -2,9 +2,6 @@ table:
   name: project_facebook_creative_templates
   schema: public
 object_relationships:
-  - name: facebook_creative_template
-    using:
-      foreign_key_constraint_on: template_id
   - name: project
     using:
       foreign_key_constraint_on: project_id
@@ -21,7 +18,7 @@ insert_permissions:
       columns:
         - data
         - project_id
-        - template_id
+        - template_name
     comment: ""
 select_permissions:
   - role: user
@@ -32,7 +29,7 @@ select_permissions:
         - updated_at
         - id
         - project_id
-        - template_id
+        - template_name
       filter:
         project:
           teams_projects:

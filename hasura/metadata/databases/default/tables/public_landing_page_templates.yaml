@@ -1,6 +1,7 @@
 table:
   name: landing_page_templates
   schema: public
+<<<<<<< HEAD
 array_relationships:
   - name: landing_pages
     using:
@@ -26,3 +27,5 @@ select_permissions:
         enabled:
           _eq: true
     comment: ""
+=======
+>>>>>>> feature/templates

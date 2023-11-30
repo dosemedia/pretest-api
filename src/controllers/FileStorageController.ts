@@ -48,10 +48,10 @@ class FileStorageController implements Controller {
 
   startup (app: Express) {
 
-    const uploadCreativeAssetPublic = multer({
+    const uploadProjectAssetPublic = multer({
       storage: multerS3({
         s3: s3ClientUserPublic as any,
-        bucket: process.env.S3_CREATIVE_ASSET_PUBLIC_BUCKET || 'creative-assets-public',
+        bucket: process.env.S3_PROJECT_ASSETS_PUBLIC_BUCKET || 'project-assets-public',
         metadata: (req, file, cb) => {
           cb(null, {originalname: file.originalname})
         },
@@ -62,17 +62,16 @@ class FileStorageController implements Controller {
           try {
             const uuid = uuidv4()
             const user = await this.getUserForRequest(req)
-            const name = req.body.name
-            const id = req.body.id
-            const creativeId = `${id}`
+            const projectId = req.body.project_id
+            const model = req.body.model
             const extension = file.originalname.split('.').pop()
-            let fileKey = `${creativeId}/${uuid}`;
+            let fileKey = `${projectId}/${model}/${uuid}`;
             if (extension) {
               fileKey += `.${extension}`
             }
 
             (req as any).saved_files = [{
-              bucket: process.env.S3_CREATIVE_ASSET_PUBLIC_BUCKET|| 'creative-assets-public',
+              bucket: process.env.S3_PROJECT_ASSETS_PUBLIC_BUCKET|| 'project-assets-public',
               originalname: file.originalname,
               mimetype: file.mimetype,
               key: fileKey,
@@ -131,18 +130,19 @@ class FileStorageController implements Controller {
       })
     })
 
-    app.post('/files/creative-assets', uploadCreativeAssetPublic.single('creative-assets'), async (req: Request, res: Response) => {
+    app.post('/files/project-assets', uploadProjectAssetPublic.single('project_assets'), async (req: Request, res: Response) => {
       // Note, jwt is checked by multer middleware
       const file = (req as any).saved_files[0]
       res.json(file)
     })
 
-    app.get('/files/creative-assets/:creativeId/:fileId', async (req: Request, res: Response) => {
-      const creativeId = req.params.creativeId
+    app.get('/files/project-assets/:projectId/:model/:fileId', async (req: Request, res: Response) => {
+      const projectId = req.params.projectId
+      const model = req.params.model
       const fileId = req.params.fileId
-      const fileKey = `${creativeId}/${fileId}`
+      const fileKey = `${projectId}/${model}/${fileId}`;
       const params = {
-        Bucket: process.env.S3_CREATIVE_ASSETS_BUCKET || 'creative-assets-public',
+        Bucket: process.env.S3_CREATIVE_ASSETS_BUCKET || 'project-assets-public',
         Key: fileKey,
       }
       try {
