@@ -2,6 +2,7 @@
 - "!include public_facebook_audiences.yaml"
 - "!include public_facebook_creatives.yaml"
 - "!include public_invitations.yaml"
+- "!include public_landing_page_events.yaml"
 - "!include public_landing_pages.yaml"
 - "!include public_project_facebook_creative_templates.yaml"
 - "!include public_projects.yaml"
