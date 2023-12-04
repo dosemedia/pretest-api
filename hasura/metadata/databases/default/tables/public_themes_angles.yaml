@@ -5,6 +5,14 @@ object_relationships:
   - name: theme
     using:
       foreign_key_constraint_on: theme_id
+array_relationships:
+  - name: facebook_creatives
+    using:
+      foreign_key_constraint_on:
+        column: angle_id
+        table:
+          name: facebook_creatives
+          schema: public
 insert_permissions:
   - role: user
     permission:
