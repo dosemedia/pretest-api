@@ -34,9 +34,12 @@ select_permissions:
       columns:
         - angle_id
         - created_at
+        - cta_text
+        - cta_type
         - data
         - id
         - project_id
+        - social_copy
         - template_name
         - theme_id
         - updated_at
@@ -53,7 +56,10 @@ update_permissions:
   - role: user
     permission:
       columns:
+        - cta_text
+        - cta_type
         - data
+        - social_copy
       filter:
         project:
           teams_projects:
