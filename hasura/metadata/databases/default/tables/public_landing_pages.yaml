@@ -5,6 +5,14 @@ object_relationships:
   - name: project
     using:
       foreign_key_constraint_on: project_id
+array_relationships:
+  - name: landing_page_events
+    using:
+      foreign_key_constraint_on:
+        column: landing_page_id
+        table:
+          name: landing_page_events
+          schema: public
 insert_permissions:
   - role: user
     permission:
