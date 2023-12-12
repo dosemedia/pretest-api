@@ -60,7 +60,7 @@ select_permissions:
     permission:
       columns:
         - brandness_approved
-        - is_draft
+        - status
         - name_approved
         - objective_approved
         - platform_approved
@@ -89,7 +89,7 @@ update_permissions:
       columns:
         - branding
         - brandness_approved
-        - is_draft
+        - status
         - name
         - name_approved
         - objective

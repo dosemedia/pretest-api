@@ -80,6 +80,13 @@ actions:
       handler: '{{ACTIONS_BASE_URL}}/sendPasswordResetEmail'
     permissions:
       - role: public
+  - name: sendSlackAlertForTeamReview
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/sendSlackAlertForTeamReview'
+    permissions:
+      - role: user
+    comment: Send slack message to alert team that a test is ready to be reviewed by the team.
   - name: verifyEmail
     definition:
       kind: synchronous

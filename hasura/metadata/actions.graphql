@@ -82,6 +82,13 @@ type Mutation {
 }
 
 type Mutation {
+  sendSlackAlertForTeamReview(
+    projectId: uuid!
+    returnUrl: String!
+  ): Boolean
+}
+
+type Mutation {
   verifyEmail(
     code: String!
   ): Boolean

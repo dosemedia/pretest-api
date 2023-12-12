@@ -44,22 +44,29 @@ model invitations {
 }
 
 model projects {
-  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name               String
-  created_at         DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
-  start_time         DateTime?            @db.Timestamptz(6)
-  stop_time          DateTime?            @db.Timestamptz(6)
-  objective          String?
-  branding           String?
-  is_draft           Boolean              @default(true)
-  platform           String?
-  project_type       String?
-  facebook_audiences facebook_audiences[]
-  facebook_creatives facebook_creatives[]
-  landing_pages      landing_pages[]
-  projects_themes    projects_themes[]
-  teams_projects     teams_projects[]
+  id                                  String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                                String
+  created_at                          DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime                              @default(now()) @db.Timestamptz(6)
+  start_time                          DateTime?                             @db.Timestamptz(6)
+  stop_time                           DateTime?                             @db.Timestamptz(6)
+  objective                           String?
+  branding                            String?
+  status                              String                                @default("draft")
+  platform                            String?
+  project_type                        String?
+  name_approved                       Boolean?
+  objective_approved                  Boolean?
+  project_type_approved               Boolean?
+  brandness_approved                  Boolean?
+  platform_approved                   Boolean?
+  start_stop_time_approved            Boolean?
+  facebook_audiences                  facebook_audiences[]
+  facebook_creatives                  facebook_creatives[]
+  landing_pages                       landing_pages[]
+  project_facebook_creative_templates project_facebook_creative_templates[]
+  projects_themes                     projects_themes[]
+  teams_projects                      teams_projects[]
 }
 
 model teams {
@@ -114,72 +121,82 @@ model facebook_audiences {
   interests           Json?
   created_at          DateTime @default(now()) @db.Timestamptz(6)
   updated_at          DateTime @default(now()) @db.Timestamptz(6)
+  approved            Boolean?
   projects            projects @relation(fields: [project_id], references: [id], onDelete: Cascade)
 }
 
 model projects_themes {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  project_id    String          @db.Uuid
-  name          String
-  created_at    DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
-  projects      projects        @relation(fields: [project_id], references: [id], onDelete: Cascade)
-  themes_angles themes_angles[]
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id         String               @db.Uuid
+  name               String
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  approved           Boolean?
+  facebook_creatives facebook_creatives[]
+  projects           projects             @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  themes_angles      themes_angles[]
 }
 
 model themes_angles {
-  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  theme_id        String          @db.Uuid
-  name            String
-  created_at      DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
-  projects_themes projects_themes @relation(fields: [theme_id], references: [id], onDelete: Cascade)
-}
-
-model facebook_creative_templates {
-  id                     String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  enabled                Boolean              @default(true)
-  name                   String
-  description            String?
-  json_schema            Json
-  ui_schema              Json?
-  creatomate_template_id String
-  created_at             DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at             DateTime             @default(now()) @db.Timestamptz(6)
-  facebook_creatives     facebook_creatives[]
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  theme_id           String               @db.Uuid
+  name               String
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  facebook_creatives facebook_creatives[]
+  projects_themes    projects_themes      @relation(fields: [theme_id], references: [id], onDelete: Cascade)
 }
 
 model facebook_creatives {
-  id                          String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  project_id                  String                      @db.Uuid
-  template_id                 String                      @db.Uuid
-  data                        Json?
-  created_at                  DateTime                    @default(now()) @db.Timestamptz(6)
-  updated_at                  DateTime                    @default(now()) @db.Timestamptz(6)
-  projects                    projects                    @relation(fields: [project_id], references: [id], onDelete: Cascade)
-  facebook_creative_templates facebook_creative_templates @relation(fields: [template_id], references: [id])
-}
-
-model landing_page_templates {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  enabled       Boolean         @default(true)
-  name          String
-  description   String?
-  json_schema   Json
-  ui_schema     Json?
-  component     String
-  created_at    DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
-  landing_pages landing_pages[]
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id      String          @db.Uuid
+  template_name   String
+  data            Json?
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
+  theme_id        String          @db.Uuid
+  angle_id        String          @db.Uuid
+  social_copy     String?
+  cta_type        String?
+  cta_text        String?
+  themes_angles   themes_angles   @relation(fields: [angle_id], references: [id], onDelete: Cascade)
+  projects        projects        @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  projects_themes projects_themes @relation(fields: [theme_id], references: [id], onDelete: Cascade)
 }
 
 model landing_pages {
-  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  project_id             String                 @db.Uuid
-  template_id            String                 @db.Uuid
-  data                   Json
-  created_at             DateTime               @default(now()) @db.Timestamptz(6)
-  updated_at             DateTime               @default(now()) @db.Timestamptz(6)
-  projects               projects               @relation(fields: [project_id], references: [id], onDelete: Cascade)
-  landing_page_templates landing_page_templates @relation(fields: [template_id], references: [id])
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id          String                @db.Uuid
+  template_name       String
+  data                Json?
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  approved            Boolean?
+  landing_page_events landing_page_events[]
+  projects            projects              @relation(fields: [project_id], references: [id], onDelete: Cascade)
+}
+
+model landing_page_events {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  landing_page_id String        @db.Uuid
+  event           String
+  sub_event       String?
+  payload         Json?
+  utm_source      String?
+  utm_medium      String?
+  utm_campaign    String?
+  utm_term        String?
+  utm_content     String?
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  landing_pages   landing_pages @relation(fields: [landing_page_id], references: [id], onDelete: NoAction)
+}
+
+model project_facebook_creative_templates {
+  id            String   @id(map: "project_facebook_creative_template_pkey") @unique(map: "project_facebook_creative_template_id_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id    String   @db.Uuid
+  template_name String
+  data          Json?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+  projects      projects @relation(fields: [project_id], references: [id], onDelete: Cascade, map: "project_facebook_creative_template_project_id_fkey")
 }
