@@ -32,12 +32,13 @@ select_permissions:
   - role: user
     permission:
       columns:
-        - data
+        - approved
         - created_at
-        - updated_at
+        - data
         - id
         - project_id
         - template_name
+        - updated_at
       filter:
         project:
           teams_projects:
@@ -50,6 +51,7 @@ update_permissions:
   - role: user
     permission:
       columns:
+        - approved
         - data
       filter:
         project:

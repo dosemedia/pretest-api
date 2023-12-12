@@ -59,17 +59,23 @@ select_permissions:
   - role: user
     permission:
       columns:
-        - branding
-        - created_at
-        - id
+        - brandness_approved
         - is_draft
+        - name_approved
+        - objective_approved
+        - platform_approved
+        - project_type_approved
+        - start_stop_time_approved
+        - branding
         - name
         - objective
         - platform
+        - project_type
+        - created_at
         - start_time
         - stop_time
-        - project_type
         - updated_at
+        - id
       filter:
         teams_projects:
           team:
@@ -82,13 +88,19 @@ update_permissions:
     permission:
       columns:
         - branding
+        - brandness_approved
         - is_draft
         - name
+        - name_approved
         - objective
+        - objective_approved
         - platform
+        - platform_approved
+        - project_type
+        - project_type_approved
+        - start_stop_time_approved
         - start_time
         - stop_time
-        - project_type
       filter:
         teams_projects:
           team:

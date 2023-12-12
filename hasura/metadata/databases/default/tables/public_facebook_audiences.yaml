@@ -25,6 +25,7 @@ select_permissions:
   - role: user
     permission:
       columns:
+        - approved
         - device_platforms
         - facebook_positions
         - genders
@@ -49,6 +50,7 @@ update_permissions:
   - role: user
     permission:
       columns:
+        - approved
         - device_platforms
         - facebook_positions
         - genders
