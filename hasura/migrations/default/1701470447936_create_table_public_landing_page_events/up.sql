@@ -1,0 +1,2 @@
+CREATE TABLE "public"."landing_page_events" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "landing_page_id" uuid NOT NULL, "event" text NOT NULL, "sub_event" text, "payload" jsonb, "utm_source" text, "utm_medium" text, "utm_campaign" text, "utm_term" text, "utm_content" text, "created_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") , FOREIGN KEY ("landing_page_id") REFERENCES "public"."landing_pages"("id") ON UPDATE cascade ON DELETE no action);
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
