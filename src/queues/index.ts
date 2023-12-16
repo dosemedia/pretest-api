@@ -5,6 +5,7 @@ import sendPasswordChangedEmail, { worker as sendPasswordChangedEmailWorker } fr
 import sendUserDestroyedEmail, { worker as sendUserDestroyedEmailWorker } from './sendUserDestroyedEmail'
 import cleanupDestroyedUserFiles, { worker as cleanupDestroyedUserFilesWorker } from './cleanupDestroyedUserFiles'
 import notifyContactFormSubmission, { worker as notifyContactFormSubmissionWorker } from './notifyContactFormSubmission'
+import sendInvitationEmail, { worker as sendInvitationEmailWorker } from './sendInvitationEmail'
 
 export const queues: Array<Queue> = [
   sendVerificationEmail,
@@ -12,7 +13,8 @@ export const queues: Array<Queue> = [
   sendPasswordChangedEmail,
   sendUserDestroyedEmail,
   cleanupDestroyedUserFiles,
-  notifyContactFormSubmission
+  notifyContactFormSubmission,
+  sendInvitationEmail
 ]
 export const workers: Array<Worker> = [
   sendVerificationEmailWorker,
@@ -20,5 +22,6 @@ export const workers: Array<Worker> = [
   sendPasswordChangedEmailWorker,
   sendUserDestroyedEmailWorker,
   cleanupDestroyedUserFilesWorker,
-  notifyContactFormSubmissionWorker
+  notifyContactFormSubmissionWorker,
+  sendInvitationEmailWorker
 ]
