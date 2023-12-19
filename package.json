@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "npx ts-node ./src/index.ts",
+    "start": "npx ts-node ./src/index.ts &",
     "dev": "nodemon ./src/index.ts",
     "dev:docker:start": "docker-compose -f ./docker-compose.yaml up -d",
     "dev:docker:stop": "docker-compose -f ./docker-compose.yaml down",
