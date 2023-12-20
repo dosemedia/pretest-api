@@ -6,6 +6,7 @@
   "scripts": {
     "start": "npx ts-node ./src/index.ts &",
     "dev": "nodemon ./src/index.ts",
+    "dev:test": "cross-env DATABASE_URL=postgres://postgres:pgadmin@localhost:5433/postgres?schema=public nodemon ./src/index.ts",
     "dev:docker:start": "docker-compose -f ./docker-compose.yaml up -d",
     "dev:docker:stop": "docker-compose -f ./docker-compose.yaml down",
     "dev:docker:test:start": "docker-compose -f ./docker-compose.test.yaml up -d",
