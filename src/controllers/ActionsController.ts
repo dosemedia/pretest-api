@@ -531,7 +531,7 @@ class ActionsController implements Controller {
         if (!project) {
           throw new Error('Project not found!')
         }
-        const blocks = [`{'type': 'section', 'text': {'type': 'mrkdwn', 'text': 'The project *${project.name}* has been submitted for review. Click <${returnUrl}|here> to check it out!'}}`]
+        const blocks = [`{'type': 'section', 'text': {'type': 'mrkdwn', 'text': 'The project *${project.name}* has been submitted for *review*. Click <${returnUrl}|here> to check it out!'}}`]
         try {
           const body = `token=${slackAccessToken}&channel=${slackChannelID}&blocks=[${blocks.toString()}]&username=Orchard Portal`
           await axios.post('https://slack.com/api/chat.postMessage', body)
@@ -544,7 +544,6 @@ class ActionsController implements Controller {
             }
           })
         } catch (e) {
-          console.log(e)
           throw Error(e as string)
         }
         res.json(true)
@@ -561,6 +560,43 @@ class ActionsController implements Controller {
         var template = Handlebars.compile(urlParams)
         const response = await axios.get(`https://graph.facebook.com/v${process.env.FACEBOOK_VERSION}${template(process.env)}&access_token=${process.env.FACEBOOK_ACCESS_TOKEN}`)
         res.json(response?.data)
+      }, res)
+    })
+
+    app.post('/hasura/actions/submitBuild', async (req: Request, res: Response) => {
+      await this.wrapErrorHandler(async () => {
+        const user = await this.getUserForRequest(req)
+        if (!user) {
+          throw new Error('User not found!')
+        }
+        const slackAccessToken = process.env.SLACK_ACCESS_TOKEN
+        const slackChannelID = process.env.SLACK_CHANNEL_ID
+        const projectId = req.body.input.projectId
+        const returnUrl = req.body.input.returnUrl
+        const project = await prisma.projects.findUnique({
+          where: {
+            id: projectId
+          }
+        })
+        if (!project) {
+          throw new Error('Project not found!')
+        }
+        const blocks = [`{'type': 'section', 'text': {'type': 'mrkdwn', 'text': 'The project *${project.name}* has been submitted for a *build*. Click <${returnUrl}|here> to check it out!'}}`]
+        try {
+          const body = `token=${slackAccessToken}&channel=${slackChannelID}&blocks=[${blocks.toString()}]&username=Orchard Portal`
+          await axios.post('https://slack.com/api/chat.postMessage', body)
+          await prisma.projects.update({
+            where: {
+              id: project.id
+            },
+            data: {
+              status: 'submitted'
+            }
+          })
+        } catch (e) {
+          throw Error(e as string)
+        }
+        res.json(true)
       }, res)
     })
   }

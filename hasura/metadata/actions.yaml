@@ -87,6 +87,13 @@ actions:
     permissions:
       - role: user
     comment: Send slack message to alert team that a test is ready to be reviewed by the team.
+  - name: submitBuild
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/submitBuild'
+    permissions:
+      - role: user
+    comment: Submit a board to be built
   - name: verifyEmail
     definition:
       kind: synchronous
@@ -96,9 +103,11 @@ actions:
       - role: public
 custom_types:
   enums: []
-  input_objects: []
+  input_objects:
+    - name: SampleInput
   objects:
     - name: RegisterOutput
     - name: LoginOutput
     - name: ProjectOutput
+    - name: SampleOutput
   scalars: []

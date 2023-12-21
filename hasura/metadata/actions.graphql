@@ -89,9 +89,21 @@ type Mutation {
 }
 
 type Mutation {
+  submitBuild(
+    projectId: uuid!
+    returnUrl: String!
+  ): Boolean
+}
+
+type Mutation {
   verifyEmail(
     code: String!
   ): Boolean
+}
+
+input SampleInput {
+  username: String!
+  password: String!
 }
 
 type RegisterOutput {
@@ -108,5 +120,9 @@ type ProjectOutput {
   id: uuid!
   name: String!
   team_id: uuid!
+}
+
+type SampleOutput {
+  accessToken: String!
 }
 
