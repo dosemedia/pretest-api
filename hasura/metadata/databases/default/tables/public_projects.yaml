@@ -89,7 +89,6 @@ update_permissions:
       columns:
         - branding
         - brandness_approved
-        - status
         - name
         - name_approved
         - objective
@@ -100,7 +99,9 @@ update_permissions:
         - project_type_approved
         - start_stop_time_approved
         - start_time
+        - status
         - stop_time
+        - updated_at
       filter:
         teams_projects:
           team:
