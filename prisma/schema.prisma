@@ -188,7 +188,7 @@ model landing_page_events {
   utm_term        String?
   utm_content     String?
   created_at      DateTime      @default(now()) @db.Timestamptz(6)
-  landing_pages   landing_pages @relation(fields: [landing_page_id], references: [id], onDelete: NoAction)
+  landing_pages   landing_pages @relation(fields: [landing_page_id], references: [id], onDelete: Cascade)
 }
 
 model project_facebook_creative_templates {
