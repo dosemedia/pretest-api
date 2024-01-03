@@ -63,7 +63,7 @@ class FileStorageController implements Controller {
             const uuid = uuidv4()
             const user = await this.getUserForRequest(req)
             const projectId = req.body.project_id
-            const model = req.body.model
+            const model = req.body.folder
             const extension = file.originalname.split('.').pop()
             let fileKey = `${projectId}/${model}/${uuid}`;
             if (extension) {
@@ -136,11 +136,12 @@ class FileStorageController implements Controller {
       res.json(file)
     })
 
-    app.get('/files/project-assets/:projectId/:model/:fileId', async (req: Request, res: Response) => {
+    app.get('/files/project-assets/:projectId/:folder/:fileId', async (req: Request, res: Response) => {
       const projectId = req.params.projectId
-      const model = req.params.model
+      const folder = req.params.folder
       const fileId = req.params.fileId
-      const fileKey = `${projectId}/${model}/${fileId}`;
+      const extension = fileId.split('.').pop() || 'image/png'
+      const fileKey = `${projectId}/${folder}/${fileId}`;
       const params = {
         Bucket: process.env.S3_CREATIVE_ASSETS_BUCKET || 'project-assets-public',
         Key: fileKey,
@@ -149,7 +150,7 @@ class FileStorageController implements Controller {
         const result = await s3ClientUserPublic.send(new GetObjectCommand(params))
         if (result.Body) {
           res.status(200);
-          res.type('image/png');
+          res.type(extension);
           (result.Body as Readable)
             .pipe(res);
         } else {
