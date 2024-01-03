@@ -83,24 +83,6 @@ cd src/emails
 yarn build
 ```
 
-## Running tests
-
-1. Get Hasura Engine and Postgres test servers up and running
-
-```
-yarn dev:docker:test:start
-```
-
-2. Change DATABASE_URL env to point at the port of your Postgres test server. 5433 is the default
-
-3. Run
-```
-yarn prisma generate
-```
-
-3. yarn dev (start the server)
-
-
 ## Troubleshooting
 
 Prisma model types not updating?
