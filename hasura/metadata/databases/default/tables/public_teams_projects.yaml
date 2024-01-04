@@ -16,8 +16,16 @@ select_permissions:
         - project_id
         - team_id
       filter:
-        team:
-          teams_users:
-            user_id:
-              _eq: X-Hasura-User-Id
+        _or:
+          - team:
+              teams_users:
+                user_id:
+                  _eq: X-Hasura-User-Id
+          - _exists:
+              _table:
+                name: admins
+                schema: public
+              _where:
+                user_id:
+                  _eq: X-Hasura-User-Id
     comment: ""

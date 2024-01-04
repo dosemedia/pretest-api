@@ -44,10 +44,18 @@ select_permissions:
         - theme_id
         - updated_at
       filter:
-        project:
-          teams_projects:
-            team:
-              teams_users:
+        _or:
+          - project:
+              teams_projects:
+                team:
+                  teams_users:
+                    user_id:
+                      _eq: X-Hasura-User-Id
+          - _exists:
+              _table:
+                name: admins
+                schema: public
+              _where:
                 user_id:
                   _eq: X-Hasura-User-Id
       allow_aggregations: true

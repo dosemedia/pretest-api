@@ -38,13 +38,21 @@ select_permissions:
         - theme_id
         - updated_at
       filter:
-        theme:
-          project:
-            teams_projects:
-              team:
-                teams_users:
-                  user_id:
-                    _eq: X-Hasura-User-Id
+        _or:
+          - theme:
+              project:
+                teams_projects:
+                  team:
+                    teams_users:
+                      user_id:
+                        _eq: X-Hasura-User-Id
+          - _exists:
+              _table:
+                name: admins
+                schema: public
+              _where:
+                user_id:
+                  _eq: X-Hasura-User-Id
     comment: ""
 update_permissions:
   - role: user

@@ -78,11 +78,19 @@ select_permissions:
         - stop_time
         - updated_at
       filter:
-        teams_projects:
-          team:
-            teams_users:
-              user_id:
-                _eq: X-Hasura-User-Id
+        _or:
+          - teams_projects:
+              team:
+                teams_users:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+          - _exists:
+              _table:
+                name: admins
+                schema: public
+              _where:
+                user_id:
+                  _eq: X-Hasura-User-Id
       allow_aggregations: true
 update_permissions:
   - role: user
@@ -105,11 +113,19 @@ update_permissions:
         - stop_time
         - updated_at
       filter:
-        teams_projects:
-          team:
-            teams_users:
-              user_id:
-                _eq: X-Hasura-User-Id
+        _or:
+          - teams_projects:
+              team:
+                teams_users:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+          - _exists:
+              _table:
+                name: admins
+                schema: public
+              _where:
+                user_id:
+                  _eq: X-Hasura-User-Id
       check: null
 delete_permissions:
   - role: user

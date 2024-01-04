@@ -39,10 +39,18 @@ select_permissions:
         - publisher_platforms
         - updated_at
       filter:
-        projects_facebook_audiences:
-          teams_projects:
-            team:
-              teams_users:
+        _or:
+          - projects_facebook_audiences:
+              teams_projects:
+                team:
+                  teams_users:
+                    user_id:
+                      _eq: X-Hasura-User-Id
+          - _exists:
+              _table:
+                name: admins
+                schema: public
+              _where:
                 user_id:
                   _eq: X-Hasura-User-Id
     comment: ""

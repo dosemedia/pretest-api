@@ -20,6 +20,12 @@ select_permissions:
         - team_id
         - user_id
       filter:
-        user_id:
-          _eq: X-Hasura-User-Id
+        user:
+          _exists:
+            _table:
+              name: teams_users
+              schema: public
+            _where:
+              user_id:
+                _eq: X-Hasura-User-Id
       allow_aggregations: true

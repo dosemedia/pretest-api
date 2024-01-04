@@ -46,6 +46,13 @@ select_permissions:
           - invitations:
               email:
                 _eq: X-Hasura-User-Email
+          - _exists:
+              _table:
+                name: admins
+                schema: public
+              _where:
+                user_id:
+                  _eq: X-Hasura-User-Id
       allow_aggregations: true
 update_permissions:
   - role: user
