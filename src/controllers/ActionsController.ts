@@ -599,6 +599,25 @@ class ActionsController implements Controller {
         res.json(true)
       }, res)
     })
+
+    app.post('/hasura/actions/isSuperadmin', async (req: Request, res: Response) => {
+      await this.wrapErrorHandler(async () => {
+        const user = await this.getUserForRequest(req)
+        if (!user) {
+          throw new Error('User not found!')
+        }
+        const admin = await prisma.admins.findUnique({
+          where: {
+            user_id: user.id
+          }
+        })
+
+        if (admin) {
+          return res.json(true)
+        }
+        return res.json(false)
+      }, res)
+    })
   }
 
   async shutdown () {

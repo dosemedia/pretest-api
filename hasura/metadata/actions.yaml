@@ -36,6 +36,13 @@ actions:
       handler: '{{ACTIONS_BASE_URL}}/facebookAPIGet'
     permissions:
       - role: user
+  - name: isSuperadmin
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/isSuperadmin'
+    permissions:
+      - role: user
+    comment: Check to see if user has superadmin capability
   - name: joinTeam
     definition:
       kind: synchronous

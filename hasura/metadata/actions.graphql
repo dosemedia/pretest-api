@@ -38,6 +38,10 @@ type Mutation {
 }
 
 type Mutation {
+  isSuperadmin: Boolean
+}
+
+type Mutation {
   joinTeam(
     teamId: uuid!
   ): Boolean
