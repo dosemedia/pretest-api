@@ -1,5 +1,6 @@
 - "!include public_admins.yaml"
 - "!include public_contact_form_submissions.yaml"
+- "!include public_copy_configurations.yaml"
 - "!include public_facebook_audiences.yaml"
 - "!include public_facebook_creatives.yaml"
 - "!include public_invitations.yaml"

@@ -26,6 +26,7 @@ select_permissions:
     permission:
       columns:
         - approved
+        - created_at
         - device_platforms
         - facebook_positions
         - genders
@@ -75,4 +76,23 @@ update_permissions:
                 user_id:
                   _eq: X-Hasura-User-Id
       check: null
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        _or:
+          - projects_facebook_audiences:
+              teams_projects:
+                team:
+                  teams_users:
+                    user_id:
+                      _eq: X-Hasura-User-Id
+          - _exists:
+              _table:
+                name: admins
+                schema: public
+              _where:
+                user_id:
+                  _eq: X-Hasura-User-Id
     comment: ""
