@@ -61,8 +61,11 @@ model projects {
   project_type_approved               Boolean?
   brandness_approved                  Boolean?
   platform_approved                   Boolean?
-  start_stop_time_approved            Boolean?
+  duration_approved                   Boolean?
   final_report_upload_url             String?
+  product_description                 String?
+  duration                            Int?
+  copy_configurations                 copy_configurations?
   facebook_audiences                  facebook_audiences[]
   facebook_creatives                  facebook_creatives[]
   landing_pages                       landing_pages[]
@@ -113,8 +116,8 @@ model facebook_audiences {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   project_id          String   @db.Uuid
   name                String?
-  min_age             Decimal? @db.Decimal
-  max_age             Decimal? @db.Decimal
+  min_age             Decimal? @default(18) @db.Decimal
+  max_age             Decimal? @default(65) @db.Decimal
   genders             Int[]    @default([1, 2])
   device_platforms    String[] @default(["mobile", "desktop"])
   facebook_positions  String[] @default(["feed"])
@@ -208,4 +211,16 @@ model admins {
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @db.Timestamptz(6)
   users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model copy_configurations {
+  project_id      String   @id @db.Uuid
+  brand_tone      String?
+  perspective     String?  @default("1st")
+  character_count Int?     @default(150)
+  template_type   String?  @default("list")
+  tone            String?  @default("humorous")
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  projects        projects @relation(fields: [project_id], references: [id], onDelete: Cascade)
 }
