@@ -71,7 +71,7 @@ const getDemoTemplate = ({ projectId, teamId }: { projectId: string, teamId: str
     }
   }
 
-  const copyConfiguration = { project_id: projectId, brand_tone: 'science-backed, technology-focused, wellness-oriented', character_count: 150, perspective: '3rd', tone: 'motivational', template_type: 'statement' } as copy_configurations
+  const copyConfiguration = { project_id: projectId, brand_tone: 'science-backed, technology-focused, wellness-oriented', character_count: 50, perspective: '3rd', tone: 'motivational', template_type: 'statement' } as copy_configurations
   return [
     prisma.projects.create({ data: project }),
     prisma.teams_projects.create({ data: teamProject }),
