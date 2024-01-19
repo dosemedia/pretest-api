@@ -5,51 +5,73 @@ const getDemoTemplate = ({ projectId, teamId }: { projectId: string, teamId: str
   const theme1Id = uuidv4()
   const theme2Id = uuidv4();
   const theme3Id = uuidv4()
-  const startDate = new Date()
-  const stopDate = new Date(startDate)
-  stopDate.setDate(startDate.getDate() + 3)
-  const project = { id: projectId, name: 'Demo Template', start_time: startDate, stop_time: stopDate, objective: 'Narrow down new flavors of chapstick', branding: 'unbranded', status: 'draft', platform: 'facebook_instagram', project_type: 'concept_test', product_description: 'This is a short description of my product' } as projects
+  const project = { id: projectId, name: 'Hydrogen Infused Water Bottle Product Concept Exploration', duration: 3, objective: 'I want to understand how to bring this product idea to life by determining the most resonating concepts and identify my target audience for future testing iterations', branding: 'unbranded', status: 'draft', platform: 'facebook_instagram', project_type: 'concept_test', product_description: 'This water bottle with infuse hydrogen into your water for packed hydration.' } as projects
   const teamProject = { project_id: projectId, team_id: teamId }
-  const audience = { name: 'Gen Pop', project_id: projectId, min_age: 18, max_age: 65, genders: [1, 2], device_platforms: ["desktop", "mobile"], facebook_positions: ["feed"], geo_locations: { "regions": {}, "countries": ["US", "JP"] }, publisher_platforms: ["facebook", "instagram"], interests: [{ "id": "6003481451064", "name": "ChapStick" }] }
+  const audience = { name: 'Gen Pop', project_id: projectId, min_age: 18, max_age: 65, genders: [1, 2], device_platforms: ["desktop", "mobile"], facebook_positions: ["feed"], geo_locations: { "regions": {}, "countries": ["US"] }, publisher_platforms: ["facebook", "instagram"] }
   const creativeTemplate = {
-    project_id: projectId, template_name: 'LifestyleTemplate', data: {
-      "mainCopy": "Balance your screentime.",
-      "logoImage": null,
-      "background": "#edfdf0"
+    project_id: projectId, template_name: 'ProductTemplate', data: {
+      "mainCopy": "Find the perfect on-the-go snack at your local bakery.",
+      "productImage": null,
+      "background": "#dce9be"
     }
   }
+
   const themes = [
-    { id: theme1Id, name: 'Value', project_id: projectId },
-    { id: theme2Id, name: 'Ease of use', project_id: projectId },
+    { id: theme1Id, name: 'Sustainability', project_id: projectId },
+    { id: theme2Id, name: 'Authenticity', project_id: projectId },
     { id: theme3Id, name: 'Efficacy', project_id: projectId }
+
   ] as projects_themes[]
+  const angles = [
+    { theme_id: theme1Id, name: 'Eco-friendly alternative' },
+    { theme_id: theme1Id, name: 'Saves precious resources' },
+    { theme_id: theme1Id, name: 'Less waste' },
+    { theme_id: theme2Id, name: 'Knows who you are' },
+    { theme_id: theme2Id, name: 'Knows what your problems are' },
+    { theme_id: theme2Id, name: 'Knows how to solve your problems' },
+    { theme_id: theme3Id, name: 'Good at what it does' },
+    { theme_id: theme3Id, name: 'Made for a single purpose' },
+    { theme_id: theme3Id, name: 'Quality' }
+  ] as themes_angles[]
   const landingPage = {
     project_id: projectId,
     template_name: 'LandingPageSimplePoll',
     data: {
       "version": 1,
-      "questions": [],
-      "textColor": "",
-      "submittedText": "",
-      "headerImageUrl": "",
-      "submitButtonText": "asdfasdf",
-      "pageBackgroundColor": "",
+      "questions": [
+        {
+          "title": "What is the price range you would consider purchasing a product like this?",
+          "options": [
+            "$10-20",
+            "$20-30",
+            "$30-40",
+            "$50+"
+          ],
+          "multipleChoice": false
+        },
+        {
+          "title": "What additonal features would you want for a product like this?",
+          "options": [
+            "Temperature Regulation",
+            "Durability",
+            "Cool Designs & Styles",
+            "Ease of Cleaning",
+            "Material Safety"
+          ],
+          "multipleChoice": true
+        }
+      ],
+      "textColor": "#ffffff",
+      "submittedText": "Thank you for submitting!",
+      "headerImageUrl": "http://localhost:3000/files/project-assets/cc91c532-7cfd-4e80-9193-e1959831e5b8/landing_pages/d9a89f14-ce66-447e-8ca8-5b8271fbd17a.png",
+      "submitButtonText": "SUBMIT",
+      "pageBackgroundColor": "#6638e5",
       "submitButtonTextColor": "",
       "submitButtonBackgroundColor": ""
     }
   }
-  const angles = [
-    { theme_id: theme1Id, name: 'More bang for your buck' },
-    { theme_id: theme1Id, name: 'Inexpensive alternative' },
-    { theme_id: theme1Id, name: 'Save your money' },
-    { theme_id: theme2Id, name: 'It\s easy' },
-    { theme_id: theme2Id, name: 'Simple / Straightforward' },
-    { theme_id: theme2Id, name: 'Familiar' },
-    { theme_id: theme3Id, name: 'Good at what it does' },
-    { theme_id: theme3Id, name: 'Made for a single purpose' },
-    { theme_id: theme3Id, name: 'Quality' }
-  ] as themes_angles[]
-  const copyConfiguration = { project_id: projectId, brand_tone: 'Dry, fit, clean', character_count: 150, perspective: '3rd', tone: 'motivational', template_type: 'statement' } as copy_configurations
+
+  const copyConfiguration = { project_id: projectId, brand_tone: 'science-backed, technology-focused, wellness-oriented', character_count: 150, perspective: '3rd', tone: 'motivational', template_type: 'statement' } as copy_configurations
   return [
     prisma.projects.create({ data: project }),
     prisma.teams_projects.create({ data: teamProject }),

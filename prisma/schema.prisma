@@ -61,9 +61,10 @@ model projects {
   project_type_approved               Boolean?
   brandness_approved                  Boolean?
   platform_approved                   Boolean?
-  start_stop_time_approved            Boolean?
+  duration_approved                   Boolean?
   final_report_upload_url             String?
   product_description                 String?
+  duration                            Int?
   copy_configurations                 copy_configurations?
   facebook_audiences                  facebook_audiences[]
   facebook_creatives                  facebook_creatives[]
